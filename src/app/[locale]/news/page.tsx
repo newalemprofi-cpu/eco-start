@@ -6,6 +6,21 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { listPublishedNews, type NewsCategory } from "@/db/repo/news";
 
+// Without this, Next treats this route as statically prerenderable
+// (fixed path, no dynamic API calls) and executes listPublishedNews()
+// against the database during `next build` — which fails in any Docker
+// build environment where the DB isn't reachable yet or migrations
+// haven't run (see PostgresError 42P01 "relation news_items does not
+// exist"). Forcing dynamic rendering also matches how the rest of the
+// news feature already behaves: the homepage carousel and the article
+// detail page ([slug]/page.tsx) are both already request-time rendered
+// (the former reads the session via cookies, the latter has no
+// generateStaticParams for its dynamic segment), so a statically
+// pre-baked list page would have been the one inconsistent piece even
+// without the build failure — published/unpublished changes should
+// show up on next visit, not only after a redeploy.
+export const dynamic = "force-dynamic";
+
 const CATEGORY_LABEL: Record<NewsCategory, string> = {
   events: "Іс-шаралар",
   eco_projects: "Эко жобалар",
