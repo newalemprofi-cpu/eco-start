@@ -1,0 +1,19 @@
+# Pins the Node.js version Nixpacks builds with — without this, Nixpacks'
+# auto-detected default can end up older than 20.9.0, which is what
+# Next.js 16 requires (see next's own package.json "engines" field).
+# An unpinned/incompatible Node version is a common cause of `npm ci`
+# failing on this repo's native/platform-specific optional dependencies
+# (@next/swc-*, sharp, lightningcss, @tailwindcss/oxide-*).
+providers = ["node"]
+
+[phases.setup]
+nixPkgs = ["nodejs_24"]
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "npm run start"
