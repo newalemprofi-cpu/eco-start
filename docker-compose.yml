@@ -1,0 +1,26 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: eco-start-ai-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ecostart
+      POSTGRES_PASSWORD: ecostart_dev_password
+      POSTGRES_DB: eco_start_ai
+    # Host port 5432 is occupied on the reference dev machine by an
+    # unrelated project's Postgres container (confirmed via `docker ps`
+    # + a direct connection probe from the host — see docs/ARCHITECTURE.md
+    # "Known limitations"). 5434 avoids that collision; the container's
+    # internal port is still the standard 5432.
+    ports:
+      - "5434:5432"
+    volumes:
+      - eco_start_ai_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ecostart -d eco_start_ai"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  eco_start_ai_pg_data:
