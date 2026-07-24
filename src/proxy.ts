@@ -78,5 +78,12 @@ function copyHeaders(target: NextResponse, source: NextResponse) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
+  // "uploads" is excluded explicitly, not just incidentally via the
+  // dotted-filename exclusion below — an extensionless upload path
+  // would otherwise be caught by next-intl's locale redirect (verified:
+  // /uploads/site-media/news/photo with no extension matches this
+  // matcher without the explicit exclusion, which is wrong for a route
+  // that must serve files exactly at "/uploads/<key>", never
+  // "/kk/uploads/<key>").
+  matcher: ["/((?!api|uploads|_next|_vercel|.*\\..*).*)"],
 };
