@@ -36,13 +36,15 @@ export type NewsItemRow = {
   display_date: string;
   main_image_url: string | null;
   gallery_urls: string[];
+  main_video_url: string | null;
+  video_urls: string[];
   version: number;
   updated_at: string;
   published_at: string | null;
   view_count: number;
 };
 
-const NEWS_JSON_FIELDS = ["gallery_urls"];
+const NEWS_JSON_FIELDS = ["gallery_urls", "video_urls"];
 
 export const listPublishedNews = () => listPublished<NewsItemRow>("news_items", "display_date");
 export const listDraftNews = (ctx: TenantContext) => listDrafts<NewsItemRow>(ctx, "news_items", "display_date");
@@ -137,8 +139,12 @@ export async function saveNewsDraft(
   ctx: TenantContext,
   groupId: string,
   patch: Partial<
-    Omit<NewsItemRow, "id" | "group_id" | "status" | "version" | "updated_at" | "published_at" | "gallery_urls"> & {
+    Omit<
+      NewsItemRow,
+      "id" | "group_id" | "status" | "version" | "updated_at" | "published_at" | "gallery_urls" | "video_urls"
+    > & {
       gallery_urls?: string[];
+      video_urls?: string[];
     }
   >
 ) {

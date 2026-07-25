@@ -1,6 +1,6 @@
 import "server-only";
 import type { TenantContext } from "@/db/client";
-import { getStorageAdapter, StorageValidationError, validateImageUpload } from "@/lib/storage";
+import { getStorageAdapter, StorageValidationError, validateImageUpload, validateVideoUpload } from "@/lib/storage";
 import { createMedia, type SiteMediaRow } from "@/db/repo/cms";
 
 export type CmsMediaKind = "logo" | "favicon" | "banner" | "section" | "module" | "icon" | "news" | "other";
@@ -37,6 +37,29 @@ export async function uploadCmsMedia(
     sizeBytes: file.size,
     alt: { kk: "", ru: "", en: "" },
   });
+}
+
+/**
+ * News-specific video upload — a sibling of uploadCmsMedia, not a
+ * variant of it: stored under a fixed site-media/news/videos/ prefix
+ * (per the news-video spec) rather than the kind-based
+ * site-media/<kind>/ layout uploadCmsMedia uses, and is NOT recorded
+ * in site_media (that table has zero readers for news — listMedia has
+ * no callers anywhere — so skipping it avoids growing an already-
+ * unused audit table rather than adding real functionality). Video
+ * metadata lives only on news_items.main_video_url/video_urls.
+ */
+export async function uploadNewsVideo(file: File): Promise<{ url: string }> {
+  validateVideoUpload({ type: file.type, size: file.size, name: file.name });
+
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  const ext = file.type === "video/webm" ? "webm" : file.type === "video/quicktime" ? "mov" : "mp4";
+  const key = `site-media/news/videos/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+  const storage = getStorageAdapter();
+  const { url } = await storage.putObject({ key, data: buffer, contentType: file.type });
+  return { url };
 }
 
 export { StorageValidationError };

@@ -1,4 +1,4 @@
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Play } from "lucide-react";
 import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { SiteHeader } from "@/components/marketing/site-header";
@@ -67,6 +67,21 @@ export default async function NewsListPage({
                       {item.main_image_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={item.main_image_url} alt="" className="size-full object-cover" />
+                      ) : item.main_video_url ? (
+                        // No main image but a main video exists — show a
+                        // clear video indicator, not an autoplaying
+                        // <video> in a card grid (item 12 of the spec).
+                        <div className="relative flex size-full items-center justify-center bg-foreground/5">
+                          <video
+                            src={item.main_video_url}
+                            className="absolute inset-0 size-full object-cover opacity-60"
+                            muted
+                            preload="metadata"
+                          />
+                          <span className="relative flex size-11 items-center justify-center rounded-full bg-background/90 shadow-sm">
+                            <Play className="size-5 translate-x-0.5 text-foreground" />
+                          </span>
+                        </div>
                       ) : (
                         <div className="flex size-full items-center justify-center text-4xl">📰</div>
                       )}

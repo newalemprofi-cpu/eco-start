@@ -32,3 +32,36 @@ export function validateImageUpload(file: { type: string; size: number }) {
     );
   }
 }
+
+// News video uploads — separate from the image validation above (never
+// reused/merged into it) so existing image behavior/limits/messages
+// stay byte-for-byte unchanged. MOV maps to video/quicktime, which is
+// what both Safari and most server-side tools report for .mov files.
+export const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime"] as const;
+export const ALLOWED_VIDEO_EXTENSIONS = ["mp4", "webm", "mov"] as const;
+
+function maxVideoBytes(): number {
+  const mb = Number(process.env.MAX_VIDEO_UPLOAD_MB);
+  return (Number.isFinite(mb) && mb > 0 ? mb : 100) * 1024 * 1024;
+}
+
+/** Kazakh error messages by design (item 15 of the news-video spec) —
+ * this is a user-facing admin-form validation error, unlike
+ * validateImageUpload's messages, which predate this requirement and
+ * are left as-is to avoid changing existing behavior. */
+export function validateVideoUpload(file: { type: string; size: number; name: string }) {
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  const typeOk = ALLOWED_VIDEO_TYPES.includes(file.type as (typeof ALLOWED_VIDEO_TYPES)[number]);
+  const extOk = (ALLOWED_VIDEO_EXTENSIONS as readonly string[]).includes(ext);
+  if (!typeOk || !extOk) {
+    throw new StorageValidationError(
+      "Қолдау көрсетілмейтін бейне форматы. Рұқсат етілген форматтар: MP4, WebM, MOV."
+    );
+  }
+  const maxBytes = maxVideoBytes();
+  if (file.size > maxBytes) {
+    throw new StorageValidationError(
+      `Бейне файл тым үлкен (${Math.round(file.size / 1024 / 1024)} МБ). Рұқсат етілген максимум: ${Math.round(maxBytes / 1024 / 1024)} МБ.`
+    );
+  }
+}

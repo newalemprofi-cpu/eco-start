@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { ArrowDown, ArrowUp, EyeOff, Loader2, Plus, Trash2, Upload, X } from "lucide-react";
+import { ArrowDown, ArrowUp, EyeOff, Loader2, Plus, Trash2, Upload, Video, X } from "lucide-react";
 import { toast } from "sonner";
 import {
   createNewsAction,
@@ -12,6 +12,7 @@ import {
   saveNewsAction,
   unpublishNewsAction,
   uploadNewsMediaAction,
+  uploadNewsVideoAction,
 } from "@/app/[locale]/app/super-admin/news/actions";
 import type { NewsItemRow } from "@/db/repo/news";
 import { NEWS_CATEGORIES, type NewsCategory } from "@/lib/news-categories";
@@ -138,6 +139,17 @@ function NewsCard({
     patch(
       "gallery_urls",
       form.gallery_urls.filter((u) => u !== url)
+    );
+  }
+
+  function addGalleryVideo(url: string) {
+    patch("video_urls", [...form.video_urls, url]);
+  }
+
+  function removeGalleryVideo(url: string) {
+    patch(
+      "video_urls",
+      form.video_urls.filter((u) => u !== url)
     );
   }
 
@@ -311,6 +323,56 @@ function NewsCard({
           </div>
         </div>
 
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-1.5">
+            <Label>Негізгі видео</Label>
+            <div className="flex items-center gap-2">
+              {form.main_video_url && (
+                <div className="relative shrink-0">
+                  <video
+                    src={form.main_video_url}
+                    className="size-14 rounded-lg border border-border/60 object-cover"
+                    muted
+                    preload="metadata"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => patch("main_video_url", null)}
+                    className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground"
+                    aria-label="Негізгі видеоны алып тастау"
+                  >
+                    <X className="size-3" />
+                  </button>
+                </div>
+              )}
+              <NewsVideoUploadLabel
+                locale={locale}
+                label={form.main_video_url ? "Видеоны алмастыру" : "Видео жүктеу"}
+                onUploaded={(url) => patch("main_video_url", url)}
+              />
+            </div>
+          </div>
+          <div className="grid gap-1.5">
+            <Label>Қосымша видеолар</Label>
+            <div className="flex flex-wrap items-center gap-2">
+              {form.video_urls.map((url) => (
+                <div key={url} className="relative">
+                  <video src={url} className="size-14 rounded-lg border border-border/60 object-cover" muted preload="metadata" />
+                  <button
+                    type="button"
+                    onClick={() => removeGalleryVideo(url)}
+                    className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground"
+                    aria-label="Видеоны алып тастау"
+                  >
+                    <X className="size-3" />
+                  </button>
+                </div>
+              ))}
+              <GalleryVideoUploadButton locale={locale} onUploaded={addGalleryVideo} />
+            </div>
+          </div>
+        </div>
+
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={onSave} disabled={saving}>
             {saving && <Loader2 className="size-4 animate-spin" />}
@@ -403,6 +465,89 @@ function GalleryUploadButton({ locale, onUploaded }: { locale: string; onUploade
       <input
         type="file"
         accept="image/png,image/jpeg,image/webp"
+        className="hidden"
+        disabled={uploading}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handle(file);
+          e.target.value = "";
+        }}
+      />
+    </label>
+  );
+}
+
+const VIDEO_ACCEPT = "video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov";
+
+/** Single-video upload label (main video) — video counterpart of
+ * NewsUploadLabel above, same shape, calls uploadNewsVideoAction
+ * instead. */
+function NewsVideoUploadLabel({
+  locale,
+  label,
+  onUploaded,
+}: {
+  locale: string;
+  label: string;
+  onUploaded: (url: string) => void;
+}) {
+  const [uploading, setUploading] = React.useState(false);
+
+  async function handle(file: File) {
+    setUploading(true);
+    const fd = new FormData();
+    fd.set("file", file);
+    const res = await uploadNewsVideoAction(locale, fd);
+    setUploading(false);
+    if (res.ok && res.url) {
+      onUploaded(res.url);
+    } else {
+      toast.error(!res.ok ? res.error : "Жүктеу сәтсіз аяқталды");
+    }
+  }
+
+  return (
+    <label className="inline-flex w-fit cursor-pointer items-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:border-primary/50 hover:text-foreground">
+      {uploading ? <Loader2 className="size-3.5 animate-spin" /> : <Video className="size-3.5" />}
+      {uploading ? "Жүктелуде..." : label}
+      <input
+        type="file"
+        accept={VIDEO_ACCEPT}
+        className="hidden"
+        disabled={uploading}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handle(file);
+          e.target.value = "";
+        }}
+      />
+    </label>
+  );
+}
+
+/** Multi-video upload button — video counterpart of GalleryUploadButton. */
+function GalleryVideoUploadButton({ locale, onUploaded }: { locale: string; onUploaded: (url: string) => void }) {
+  const [uploading, setUploading] = React.useState(false);
+
+  async function handle(file: File) {
+    setUploading(true);
+    const fd = new FormData();
+    fd.set("file", file);
+    const res = await uploadNewsVideoAction(locale, fd);
+    setUploading(false);
+    if (res.ok && res.url) {
+      onUploaded(res.url);
+    } else {
+      toast.error(!res.ok ? res.error : "Жүктеу сәтсіз аяқталды");
+    }
+  }
+
+  return (
+    <label className="flex size-14 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-border text-muted-foreground hover:border-primary/50 hover:text-foreground">
+      {uploading ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+      <input
+        type="file"
+        accept={VIDEO_ACCEPT}
         className="hidden"
         disabled={uploading}
         onChange={(e) => {

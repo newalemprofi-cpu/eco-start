@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireRole, toTenantContext } from "@/lib/auth/dal";
 import { logAudit } from "@/db/repo/audit";
-import { uploadCmsMedia, StorageValidationError } from "@/lib/cms/upload";
+import { uploadCmsMedia, uploadNewsVideo, StorageValidationError } from "@/lib/cms/upload";
 import {
   createNewsDraft,
   deleteNews,
@@ -104,6 +104,24 @@ export async function uploadNewsMediaAction(
     const media = await uploadCmsMedia(ctx, "news", file);
     revalidatePath(`/${locale}/app/super-admin/news`);
     return { ok: true, url: media.url };
+  } catch (err) {
+    if (err instanceof StorageValidationError) return { ok: false, error: err.message };
+    throw err;
+  }
+}
+
+export async function uploadNewsVideoAction(
+  locale: string,
+  formData: FormData
+): Promise<ActionResult & { url?: string }> {
+  await requireRole("SUPER_ADMIN");
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) return { ok: false, error: "Файл таңдалмады." };
+
+  try {
+    const { url } = await uploadNewsVideo(file);
+    revalidatePath(`/${locale}/app/super-admin/news`);
+    return { ok: true, url };
   } catch (err) {
     if (err instanceof StorageValidationError) return { ok: false, error: err.message };
     throw err;

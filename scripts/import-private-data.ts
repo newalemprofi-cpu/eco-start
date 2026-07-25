@@ -57,6 +57,7 @@ async function syncTeacherGroups(tx: postgres.TransactionSql, groupId: string, t
 }
 
 const TARGET_SCHOOL_NAME = '№37 «Жұлдыз-ай» бөбекжайы';
+const TARGET_SCHOOL_REGION = "Батыс Қазақстан облысы, Орал қаласы";
 const DEMO_GROUP_CODES = ["KUN-01", "ORTA-01", "ERESEK-01", "MAD-01"];
 const OLD_NEWS_AUTHOR_FALLBACK = "Әкімшілік";
 const ACADEMIC_YEAR = "2025-2026";
@@ -125,16 +126,24 @@ function assertMatchesBaseline(parsed: ParsedWorkbook, sheetCount: number) {
 }
 
 async function ensureSchool(tx: postgres.TransactionSql): Promise<string> {
+  // region is always (re)asserted below regardless of which branch runs,
+  // so a stale value from the original demo seed (or any prior run of
+  // this script before TARGET_SCHOOL_REGION existed) never survives a
+  // re-import — matches the same "canonical source, not just a one-off
+  // fix" requirement the name itself already followed.
   const existing = await tx<{ id: string }[]>`select id from schools where name = ${TARGET_SCHOOL_NAME} limit 1`;
-  if (existing[0]) return existing[0].id;
+  if (existing[0]) {
+    await tx`update schools set region = ${TARGET_SCHOOL_REGION} where id = ${existing[0].id}`;
+    return existing[0].id;
+  }
 
   const any = await tx<{ id: string }[]>`select id from schools order by created_at asc limit 1`;
   if (any[0]) {
-    await tx`update schools set name = ${TARGET_SCHOOL_NAME} where id = ${any[0].id}`;
+    await tx`update schools set name = ${TARGET_SCHOOL_NAME}, region = ${TARGET_SCHOOL_REGION} where id = ${any[0].id}`;
     return any[0].id;
   }
   const [created] = await tx<{ id: string }[]>`
-    insert into schools (name, default_locale, plan) values (${TARGET_SCHOOL_NAME}, 'kk', 'growth') returning id
+    insert into schools (name, region, default_locale, plan) values (${TARGET_SCHOOL_NAME}, ${TARGET_SCHOOL_REGION}, 'kk', 'growth') returning id
   `;
   return created.id;
 }

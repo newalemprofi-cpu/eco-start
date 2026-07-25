@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,7 @@ export type CarouselNewsItem = {
   excerpt: string;
   dateLabel: string;
   imageUrl: string | null;
+  hasVideo: boolean;
 };
 
 const ROTATE_MS = 7000;
@@ -187,6 +188,15 @@ function NewsSlide({
         )}
         {hasImage && <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />}
       </Link>
+
+      {!hasImage && item.hasVideo && (
+        // No main image but a main video exists — a clear, static
+        // indicator only (item 12: no autoplay in the carousel).
+        <span className="pointer-events-none absolute top-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-background/90 px-3 py-1.5 text-xs font-semibold shadow-sm">
+          <Play className="size-3.5 translate-x-0.5 text-primary" />
+          Видео
+        </span>
+      )}
 
       <div className="pointer-events-none absolute inset-0 mx-auto flex max-w-6xl flex-col justify-end gap-3 px-4 pb-14 sm:px-6 sm:pb-16">
         {item.dateLabel && (

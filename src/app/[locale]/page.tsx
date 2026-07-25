@@ -62,6 +62,7 @@ export default async function LandingPage({
       excerpt: n.excerpt,
       dateLabel: formatNewsDate(n.display_date),
       imageUrl: n.main_image_url,
+      hasVideo: !!n.main_video_url,
     }))
     .filter((n) => n.title);
 

@@ -63,6 +63,21 @@ export default async function NewsDetailPage({
             </div>
           )}
 
+          {item.main_video_url && (
+            // Real HTML5 player, controls on, no forced autoplay — can
+            // coexist with a main image above (item 11: images and
+            // video are not mutually exclusive).
+            <div className="mt-6 aspect-video w-full overflow-hidden rounded-2xl bg-black">
+              <video
+                src={item.main_video_url}
+                controls
+                playsInline
+                preload="metadata"
+                className="size-full"
+              />
+            </div>
+          )}
+
           <div className="mt-6 flex flex-col gap-4 text-base text-pretty whitespace-pre-line">{item.body}</div>
 
           {item.gallery_urls.length > 0 && (
@@ -70,6 +85,21 @@ export default async function NewsDetailPage({
               {item.gallery_urls.map((url) => (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img key={url} src={url} alt="" className="aspect-square rounded-xl object-cover" />
+              ))}
+            </div>
+          )}
+
+          {item.video_urls.length > 0 && (
+            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {item.video_urls.map((url) => (
+                <video
+                  key={url}
+                  src={url}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  className="aspect-video w-full rounded-xl bg-black"
+                />
               ))}
             </div>
           )}
