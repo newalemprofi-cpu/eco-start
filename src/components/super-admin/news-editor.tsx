@@ -488,6 +488,15 @@ function GalleryUploadButton({ locale, onUploaded }: { locale: string; onUploade
 
 const VIDEO_ACCEPT = "video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov";
 
+// Shown when the video Server Action call itself throws/rejects rather
+// than returning a normal {ok:false} result — e.g. the server refusing
+// the request outright (413 body-too-large, a network drop mid-upload).
+// validateVideoUpload's own rejection messages (unsupported format,
+// over MAX_VIDEO_UPLOAD_MB) already return a normal {ok:false, error}
+// result and are shown via toast.error(res.error) below, unchanged.
+const VIDEO_UPLOAD_NETWORK_ERROR =
+  "Видео жүктелмеді. Файл көлемі рұқсат етілген шектен асып кетті немесе сервер қабылдамады.";
+
 /** Single-video upload label (main video) — video counterpart of
  * NewsUploadLabel above, same shape, calls uploadNewsVideoAction
  * instead. */
@@ -504,14 +513,24 @@ function NewsVideoUploadLabel({
 
   async function handle(file: File) {
     setUploading(true);
-    const fd = new FormData();
-    fd.set("file", file);
-    const res = await uploadNewsVideoAction(locale, fd);
-    setUploading(false);
-    if (res.ok && res.url) {
-      onUploaded(res.url);
-    } else {
-      toast.error(!res.ok ? res.error : "Жүктеу сәтсіз аяқталды");
+    try {
+      const fd = new FormData();
+      fd.set("file", file);
+      const res = await uploadNewsVideoAction(locale, fd);
+      if (res.ok && res.url) {
+        onUploaded(res.url);
+      } else {
+        toast.error(!res.ok ? res.error : "Жүктеу сәтсіз аяқталды");
+      }
+    } catch {
+      // The Server Action call itself threw (e.g. a 413 for a body
+      // over the configured limit) rather than resolving with a
+      // normal {ok:false} result — without this catch, `uploading`
+      // would never reset and the button would say "Жүктелуде..."
+      // forever.
+      toast.error(VIDEO_UPLOAD_NETWORK_ERROR);
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -540,14 +559,22 @@ function GalleryVideoUploadButton({ locale, onUploaded }: { locale: string; onUp
 
   async function handle(file: File) {
     setUploading(true);
-    const fd = new FormData();
-    fd.set("file", file);
-    const res = await uploadNewsVideoAction(locale, fd);
-    setUploading(false);
-    if (res.ok && res.url) {
-      onUploaded(res.url);
-    } else {
-      toast.error(!res.ok ? res.error : "Жүктеу сәтсіз аяқталды");
+    try {
+      const fd = new FormData();
+      fd.set("file", file);
+      const res = await uploadNewsVideoAction(locale, fd);
+      if (res.ok && res.url) {
+        onUploaded(res.url);
+      } else {
+        toast.error(!res.ok ? res.error : "Жүктеу сәтсіз аяқталды");
+      }
+    } catch {
+      // See NewsVideoUploadLabel's identical catch above for why this
+      // is needed — a thrown/rejected Server Action call (e.g. 413)
+      // must still reset `uploading`, not leave the spinner stuck.
+      toast.error(VIDEO_UPLOAD_NETWORK_ERROR);
+    } finally {
+      setUploading(false);
     }
   }
 
