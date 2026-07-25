@@ -8,6 +8,7 @@ import {
   wrapJsonFields,
   type ContentStatus,
 } from "@/db/repo/cms-core";
+import { normalizeNewsMediaFields } from "@/lib/news/media-fields";
 
 // ── News (list, admin-created — no fixed key) ───────────────────────
 //
@@ -46,8 +47,21 @@ export type NewsItemRow = {
 
 const NEWS_JSON_FIELDS = ["gallery_urls", "video_urls"];
 
-export const listPublishedNews = () => listPublished<NewsItemRow>("news_items", "display_date");
-export const listDraftNews = (ctx: TenantContext) => listDrafts<NewsItemRow>(ctx, "news_items", "display_date");
+// normalizeNewsMediaFields (src/lib/news/media-fields.ts) guards every
+// NewsItemRow this module hands back to a caller against jsonb array
+// columns coming back as anything other than a real array — `null` (a
+// row written before 0013_news_video.sql added the column, if that
+// migration hasn't run against this database yet), `undefined` (the
+// column simply absent from the row object for the same reason), or
+// malformed jsonb. Every caller (news-editor.tsx, the public list/
+// article pages) calls .map()/.length/spread directly on these
+// fields, so every function below that hands a row to a caller
+// normalizes it first.
+
+export const listPublishedNews = () =>
+  listPublished<NewsItemRow>("news_items", "display_date").then((rows) => rows.map(normalizeNewsMediaFields));
+export const listDraftNews = (ctx: TenantContext) =>
+  listDrafts<NewsItemRow>(ctx, "news_items", "display_date").then((rows) => rows.map(normalizeNewsMediaFields));
 
 export async function listNewsGroupIds(ctx: TenantContext): Promise<string[]> {
   return withTenantContext(ctx, async (sql) => {
@@ -61,7 +75,7 @@ export async function getPublishedNewsBySlug(slug: string): Promise<NewsItemRow 
     const rows = await sql<NewsItemRow[]>`
       select * from news_items where slug = ${slug} and status = 'published' limit 1
     `;
-    return rows[0] ?? null;
+    return rows[0] ? normalizeNewsMediaFields(rows[0]) : null;
   });
 }
 
@@ -94,7 +108,10 @@ export async function getPublishedNewsNeighbors(
         order by display_date asc limit 1
       `,
     ]);
-    return { prev: prevRows[0] ?? null, next: nextRows[0] ?? null };
+    return {
+      prev: prevRows[0] ? normalizeNewsMediaFields(prevRows[0]) : null,
+      next: nextRows[0] ? normalizeNewsMediaFields(nextRows[0]) : null,
+    };
   });
 }
 
@@ -107,7 +124,7 @@ export async function createNewsDraft(ctx: TenantContext): Promise<NewsItemRow> 
       values ('draft', ${(max ?? -1) + 1}, ${slug}, ${ctx.userId}, ${ctx.userId})
       returning *
     `;
-    return created;
+    return normalizeNewsMediaFields(created);
   });
 }
 
@@ -117,7 +134,7 @@ export async function ensureNewsDraft(ctx: TenantContext, groupId: string): Prom
     const existing = await sql<NewsItemRow[]>`
       select * from news_items where group_id = ${groupId} and status = 'draft' limit 1
     `;
-    if (existing[0]) return existing[0];
+    if (existing[0]) return normalizeNewsMediaFields(existing[0]);
 
     const published = await sql<Record<string, unknown>[]>`
       select * from news_items where group_id = ${groupId} and status = 'published' limit 1
@@ -131,7 +148,7 @@ export async function ensureNewsDraft(ctx: TenantContext, groupId: string): Prom
       insert into news_items ${sql(wrapJsonFields(sql, { ...rest, status: "draft" }, NEWS_JSON_FIELDS))}
       returning *
     `;
-    return created;
+    return normalizeNewsMediaFields(created);
   });
 }
 

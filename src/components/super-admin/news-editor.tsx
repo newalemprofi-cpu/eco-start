@@ -16,6 +16,7 @@ import {
 } from "@/app/[locale]/app/super-admin/news/actions";
 import type { NewsItemRow } from "@/db/repo/news";
 import { NEWS_CATEGORIES, type NewsCategory } from "@/lib/news-categories";
+import { normalizeNewsMediaFields } from "@/lib/news/media-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,6 +34,14 @@ const CATEGORY_LABEL: Record<NewsCategory, string> = {
   announcements: "Хабарландырулар",
 };
 
+// Defensive normalization at the render boundary — belt-and-suspenders
+// alongside src/db/repo/news.ts, which already normalizes at the data-
+// layer source via the same shared normalizeNewsMediaFields (see
+// src/lib/news/media-fields.ts). Applied once, right where an item
+// enters React state, rather than guarded at every individual
+// .map()/.filter()/spread call site below.
+const normalizeNewsItem = normalizeNewsMediaFields<NewsItemRow>;
+
 /**
  * Free-form list like BannersEditor (admin creates/deletes items, no
  * fixed enum) — same group_id identity + resync-on-refresh pattern, see
@@ -41,13 +50,13 @@ const CATEGORY_LABEL: Record<NewsCategory, string> = {
 export function NewsEditor({ initial, locale }: { initial: NewsItemRow[]; locale: string }) {
   const router = useRouter();
   const [items, setItems] = React.useState(
-    [...initial].sort((a, b) => a.display_order - b.display_order)
+    [...initial].map(normalizeNewsItem).sort((a, b) => a.display_order - b.display_order)
   );
   const [creating, setCreating] = React.useState(false);
 
   React.useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setItems([...initial].sort((a, b) => a.display_order - b.display_order));
+    setItems([...initial].map(normalizeNewsItem).sort((a, b) => a.display_order - b.display_order));
   }, [initial]);
 
   function updateItem(groupId: string, next: NewsItemRow) {
@@ -119,7 +128,7 @@ function NewsCard({
   onMoveDown?: () => void;
 }) {
   const router = useRouter();
-  const [form, setForm] = React.useState(item);
+  const [form, setForm] = React.useState(() => normalizeNewsItem(item));
   const [saving, setSaving] = React.useState(false);
   const [publishing, setPublishing] = React.useState(false);
   const [unpublishing, setUnpublishing] = React.useState(false);
