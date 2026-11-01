@@ -44,6 +44,8 @@ export type LessonBundle = {
   plan: string[];
   quiz: { question: string; options: string[]; correctIndex: number }[];
   homeworkTip: string;
+  /** Filled from the age band's profile (lesson-normalize.ts), not by the model. */
+  durationMinutes?: number;
 };
 
 export type StoryOutput = {

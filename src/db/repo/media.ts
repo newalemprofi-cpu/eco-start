@@ -1,5 +1,8 @@
 import "server-only";
+import type postgres from "postgres";
 import { withTenantContext, type TenantContext } from "@/db/client";
+import { readJsonb } from "@/db/jsonb";
+import { toServedMediaUrl } from "@/lib/storage/media-access";
 
 export type MediaAssetRow = {
   id: string;
@@ -13,7 +16,7 @@ export type MediaAssetRow = {
 };
 
 export async function listMediaForChild(ctx: TenantContext): Promise<MediaAssetRow[]> {
-  return withTenantContext(
+  const rows = await withTenantContext(
     ctx,
     (sql) => sql<MediaAssetRow[]>`
       select id, type, title, file_url as "fileUrl", script_text as "scriptText",
@@ -23,6 +26,13 @@ export async function listMediaForChild(ctx: TenantContext): Promise<MediaAssetR
       order by created_at desc
     `
   );
+  // Storyboards saved before the sql.json fix are double-encoded strings.
+  // Legacy public R2 URLs → guarded /uploads/… path (no data rewrite).
+  return rows.map((r) => ({
+    ...r,
+    fileUrl: toServedMediaUrl(r.fileUrl, process.env.R2_PUBLIC_URL),
+    storyboard: readJsonb<MediaAssetRow["storyboard"]>(r.storyboard),
+  }));
 }
 
 export async function createMediaProject(
@@ -43,7 +53,7 @@ export async function createMediaProject(
       insert into media_assets (school_id, child_id, created_by, type, title, script_text, storyboard, file_url, ai_provider, ai_is_mock)
       values (
         ${ctx.schoolId}, ${ctx.userId}, ${ctx.userId}, ${input.type}, ${input.title},
-        ${input.scriptText}, ${input.storyboard ? JSON.stringify(input.storyboard) : null},
+        ${input.scriptText}, ${input.storyboard ? sql.json(input.storyboard as postgres.JSONValue) : null},
         ${input.fileUrl}, ${input.provider}, ${input.isMock}
       )
       returning id

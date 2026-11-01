@@ -4,6 +4,7 @@ import { requireRole, toTenantContext } from "@/lib/auth/dal";
 import { getAssignments, getGroupActivity, getPrimaryGroup, getRoster } from "@/db/repo/teacher";
 import { GROUP_AGE_CATEGORY_DESCRIPTION, GROUP_AGE_CATEGORY_LABEL } from "@/lib/group-age-categories";
 import { Card, CardContent } from "@/components/ui/card";
+import { Link } from "@/i18n/navigation";
 
 const ACTIVITY_ICON = { recognition: Camera, game: Gamepad2, growth: Sprout, research: FlaskConical } as const;
 
@@ -44,19 +45,21 @@ export default async function TeacherOverviewPage({
         <h2 className="font-heading text-lg font-bold">{t("childProgress")}</h2>
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {roster.map((child) => (
-            <Card key={child.id} className="border-border/60 shadow-sm">
-              <CardContent className="flex items-center gap-3 pt-2">
-                <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-xl">
-                  {child.avatarUrl ?? "🦉"}
-                </span>
-                <div className="flex-1">
-                  <p className="font-semibold">{child.displayName}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Lvl {child.level} • {child.xp} XP
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <Link key={child.id} href={`/app/teacher/reports/child/${child.id}`}>
+              <Card className="h-full border-border/60 shadow-sm transition hover:shadow-md">
+                <CardContent className="flex items-center gap-3 pt-2">
+                  <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-xl">
+                    {child.avatarUrl ?? "🦉"}
+                  </span>
+                  <div className="flex-1">
+                    <p className="font-semibold">{child.displayName}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Lvl {child.level} • {child.xp} XP
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       </div>

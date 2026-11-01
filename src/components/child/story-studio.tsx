@@ -14,6 +14,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 
+const TOPIC_PRESETS = [
+  { emoji: "🌲", label: "Орман" },
+  { emoji: "🌊", label: "Өзен" },
+  { emoji: "🦋", label: "Көбелек" },
+  { emoji: "🐻", label: "Аю" },
+  { emoji: "🌻", label: "Күнбағыс" },
+  { emoji: "🌧️", label: "Жаңбыр" },
+] as const;
+
 export function StoryStudio({ locale }: { locale: string }) {
   const router = useRouter();
   const [topic, setTopic] = React.useState("");
@@ -24,9 +33,14 @@ export function StoryStudio({ locale }: { locale: string }) {
 
   async function onGenerateStory(e: React.FormEvent) {
     e.preventDefault();
+    await generateFor(topic);
+  }
+
+  async function generateFor(chosen: string) {
+    setTopic(chosen);
     setLoading("story");
     setStoryboard(null);
-    const res = await generateStoryAction(locale, topic);
+    const res = await generateStoryAction(locale, chosen);
     setLoading(null);
     if (res.ok) {
       setStory(res.story);
@@ -63,6 +77,23 @@ export function StoryStudio({ locale }: { locale: string }) {
   return (
     <Card className="border-border/60 shadow-sm">
       <CardContent className="flex flex-col gap-4 pt-2">
+        {/* Picture topics: one tap starts a story, no typing needed. */}
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+          {TOPIC_PRESETS.map((p) => (
+            <button
+              key={p.label}
+              type="button"
+              disabled={loading === "story"}
+              onClick={() => generateFor(p.label)}
+              className="flex flex-col items-center gap-1 rounded-2xl border-4 border-border/60 bg-card p-2 transition active:scale-95 disabled:opacity-50"
+            >
+              <span className="text-4xl" aria-hidden>
+                {p.emoji}
+              </span>
+              <span className="text-xs font-bold">{p.label}</span>
+            </button>
+          ))}
+        </div>
         <form onSubmit={onGenerateStory} className="flex gap-2">
           <Input
             value={topic}
@@ -76,7 +107,7 @@ export function StoryStudio({ locale }: { locale: string }) {
             ) : (
               <Sparkles className="size-4" />
             )}
-            Story
+            Ертегі
           </Button>
         </form>
 

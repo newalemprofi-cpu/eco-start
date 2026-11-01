@@ -1,5 +1,6 @@
 import "server-only";
 import { withTenantContext, type TenantContext } from "@/db/client";
+import { jsonbObjectSql } from "@/db/jsonb";
 import type { GroupAgeCategory } from "@/lib/group-age-categories";
 
 export type TeacherGroup = {
@@ -28,6 +29,25 @@ export async function getPrimaryGroup(ctx: TenantContext): Promise<TeacherGroup>
     `
   );
   return rows[0] ?? null;
+}
+
+/** Every group linked to the teacher (getPrimaryGroup only returns the
+ * oldest one) — the AI Studio publish picker and research form use
+ * this so a teacher with two groups can target either. */
+export async function listTeacherGroups(ctx: TenantContext): Promise<NonNullable<TeacherGroup>[]> {
+  return withTenantContext(
+    ctx,
+    (sql) => sql<NonNullable<TeacherGroup>[]>`
+      select g.id, g.name, g.age_band as "ageBand", g.code, g.age_category as "ageCategory",
+             au.display_name as "pedagogicalAssistantName",
+             (select count(*)::int from users c where c.group_id = g.id and c.role = 'CHILD') as "childCount"
+      from teacher_groups tg
+      join groups g on g.id = tg.group_id
+      left join users au on au.id = g.pedagogical_assistant_id
+      where tg.teacher_id = ${ctx.userId} and g.archived_at is null
+      order by g.created_at asc
+    `
+  );
 }
 
 export type RosterChild = {
@@ -63,7 +83,7 @@ export async function getGroupActivity(ctx: TenantContext, groupId: string, limi
     ctx,
     (sql) => sql<GroupActivityItem[]>`
       (select u.display_name as "childName", 'recognition' as kind,
-              coalesce(r.ai_summary->>'label', 'Эко Зертхана') as label, r.created_at as "occurredAt"
+              coalesce(${sql.unsafe(jsonbObjectSql("r.ai_summary"))}->>'label', 'Эко Зертхана') as label, r.created_at as "occurredAt"
        from recognitions r join users u on u.id = r.child_id where u.group_id = ${groupId})
       union all
       (select u.display_name as "childName", 'game' as kind, ('Ойын: ' || gs.score || ' ұпай') as label, gs.ended_at as "occurredAt"
@@ -97,7 +117,7 @@ export async function getAssignments(ctx: TenantContext, groupId: string): Promi
       select la.id, l.topic, la.due_at as "dueAt", la.assigned_at as "assignedAt"
       from lesson_assignments la
       join lessons l on l.id = la.lesson_id
-      where la.group_id = ${groupId}
+      where la.group_id = ${groupId} and l.status = 'published'
       order by la.assigned_at desc
     `
   );

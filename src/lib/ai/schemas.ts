@@ -38,6 +38,7 @@ export const LessonSchema = z.object({
     )
     .min(1),
   homeworkTip: z.string().min(1),
+  durationMinutes: z.number().int().min(1).max(120).optional(),
 });
 
 export const StorySchema = z.object({

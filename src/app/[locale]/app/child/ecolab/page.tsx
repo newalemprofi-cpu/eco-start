@@ -5,6 +5,7 @@ import { getJournal } from "@/db/repo/ecolab";
 import { EcoLabUploader } from "@/components/child/ecolab-uploader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "@/i18n/navigation";
 
 export default async function EcoLabPage({
   params,
@@ -38,19 +39,21 @@ export default async function EcoLabPage({
         ) : (
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
             {journal.map((entry) => (
-              <Card key={entry.id} className="overflow-hidden border-border/60 py-0 shadow-sm">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={entry.imageUrl} alt="" className="h-24 w-full bg-muted object-cover" />
-                <CardContent className="flex flex-col gap-1 px-3 py-2.5">
-                  <span className="truncate text-sm font-semibold">{entry.label ?? "?"}</span>
-                  <div className="flex items-center gap-1.5">
-                    <Badge variant="outline" className="text-[10px]">
-                      {Math.round(entry.confidence * 100)}%
-                    </Badge>
-                    {entry.isPotentiallyToxic && <ShieldAlert className="size-3.5 text-destructive" />}
-                  </div>
-                </CardContent>
-              </Card>
+              <Link key={entry.id} href={`/app/child/ecolab/${entry.id}`} className="rounded-xl transition active:scale-95">
+                <Card className="h-full overflow-hidden border-border/60 py-0 shadow-sm transition hover:shadow-md">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={entry.imageUrl} alt="" className="h-32 w-full bg-muted object-cover" />
+                  <CardContent className="flex flex-col gap-1 px-3 py-2.5">
+                    <span className="truncate text-sm font-semibold">{entry.label ?? "?"}</span>
+                    <div className="flex items-center gap-1.5">
+                      <Badge variant="outline" className="text-[10px]">
+                        {Math.round(entry.confidence * 100)}%
+                      </Badge>
+                      {entry.isPotentiallyToxic && <ShieldAlert className="size-3.5 text-destructive" />}
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
         )}

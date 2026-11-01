@@ -3,6 +3,10 @@ import { withSystemContext } from "@/db/client";
 import { verifySecret } from "@/lib/auth/hash";
 import type { Role } from "@/lib/auth/session";
 
+// bcrypt(cost 10) of a random value nobody knows — only ever compared
+// against, to equalise timing for unknown identifiers.
+const TIMING_DUMMY_HASH = "$2b$10$S7RDxmxf53FTto1xklsLnu8RvtRh25Z0jB2zt.3vjQwuD4yBwzjIy";
+
 type CredentialRow = {
   id: string;
   school_id: string;
@@ -40,7 +44,12 @@ export async function authenticate(
     (sql) => sql<CredentialRow[]>`select * from auth_lookup_credentials(${identifier})`
   );
   const row = rows[0];
-  if (!row) return null;
+  if (!row) {
+    // Same bcrypt cost as a real check, so response time doesn't reveal
+    // whether a login code / email exists.
+    await verifySecret(secret, TIMING_DUMMY_HASH);
+    return null;
+  }
 
   const hash = row.role === "CHILD" ? row.pin_hash : row.password_hash;
   const ok = await verifySecret(secret, hash);

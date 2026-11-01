@@ -16,6 +16,7 @@ import { config } from "dotenv";
 import bcrypt from "bcryptjs";
 import postgres from "postgres";
 import { ECOGAMES, ECOGAME_ACHIEVEMENTS } from "./seed-data/ecogames";
+import { assertDemoSchoolsAreDemoOnly, assertSeedEnvironment, SeedRefusedError } from "./seed-guard";
 
 config({ path: ".env.local" });
 config();
@@ -28,11 +29,18 @@ async function main() {
     console.error("DATABASE_URL is not set. Copy .env.example to .env.local first.");
     process.exit(1);
   }
+  // Refuses production / non-local databases before connecting at all.
+  assertSeedEnvironment(process.env);
   const sql = postgres(connectionString, { max: 1 });
 
   try {
     console.log("→ clearing previously seeded demo data...");
-    await sql`delete from schools where id in (select school_id from users where is_demo = true)`;
+    // Guard + delete in one transaction: aborts (and deletes nothing) if
+    // any school about to be removed contains a real, non-demo user.
+    await sql.begin(async (tx) => {
+      await assertDemoSchoolsAreDemoOnly(tx);
+      await tx`delete from schools where id in (select school_id from users where is_demo = true)`;
+    });
 
     const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
     const pinHash = await bcrypt.hash(DEMO_PASSWORD, 10);
@@ -760,6 +768,10 @@ async function main() {
 }
 
 main().catch((err) => {
+  if (err instanceof SeedRefusedError) {
+    console.error(err.message);
+    process.exit(2);
+  }
   console.error("Seed failed:", err);
   process.exit(1);
 });

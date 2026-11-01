@@ -5,6 +5,8 @@ import { MockAiProvider } from "@/lib/ai/providers/mock";
 import { OpenRouterProvider } from "@/lib/ai/providers/openrouter";
 import { enforceChatSafety, enforceRecognitionSafety } from "@/lib/ai/safety";
 import { isDevOnlyChain, selectProviderOrder, type AiEnv } from "@/lib/ai/provider-selection";
+import { normalizeLessonForAge } from "@/lib/ai/lesson-normalize";
+import { DEFAULT_AGE_BAND, isAgeBand } from "@/lib/domain/age-bands";
 import type {
   AiCapability,
   AiProvider,
@@ -159,7 +161,8 @@ export async function generateLessonBundle(
   const { result, provider, isMock } = await runWithFallback("lesson_generate", ctx, (p) =>
     p.generateLesson(input)
   );
-  return { ...result, provider, isMock };
+  const band = isAgeBand(input.ageBand) ? input.ageBand : DEFAULT_AGE_BAND;
+  return { ...normalizeLessonForAge(result, band), provider, isMock };
 }
 
 export async function generateEcoStory(

@@ -17,20 +17,23 @@ test("child can add a greenhouse plant and log growth", async ({ page }) => {
   await loginChild(page);
   await page.goto("/kk/app/child/greenhouse");
   await page.getByRole("button", { name: "Жаңа өсімдік қосу" }).click();
-  await page.getByRole("button", { name: "🌻" }).click();
-  await page.getByRole("button", { name: "💧💧" }).click();
+  // Category → vegetable → watering, all picture taps.
+  await page.getByRole("tab", { name: /Көкөністер/ }).click();
+  await page.getByRole("button", { name: /Қызанақ/ }).click();
+  await page.getByRole("button", { name: "2 күнде" }).click();
   await page.getByRole("button", { name: "Сақтау" }).click();
   // Newly planted entries default planted_at = now() and the list
   // sorts by planted_at desc, so the just-created plant is always
   // first — not last — regardless of how many prior runs accumulated.
-  const newPlant = page.getByText("Күнбағысым", { exact: true }).first();
+  const newPlant = page.getByText("Қызанақ", { exact: true }).first();
   await expect(newPlant).toBeVisible({ timeout: 10000 });
 
   await newPlant.click();
   await expect(page).toHaveURL(/greenhouse\/[a-f0-9-]+/);
-  await page.getByLabel("Биіктігі (см)").fill("12.5");
+  // Leaf count is picked from pictures instead of typed.
+  await page.getByRole("button", { name: "3 жапырақ" }).click();
   await page.getByRole("button", { name: "Бақылау қосу" }).click();
-  await expect(page.getByText("12.5 cm")).toBeVisible({ timeout: 10000 });
+  await expect(page.getByLabel("3 жапырақ").last()).toBeVisible({ timeout: 10000 });
 });
 
 // Waste sorting is drag-and-drop (dnd-kit), not tap-a-bin-button — see

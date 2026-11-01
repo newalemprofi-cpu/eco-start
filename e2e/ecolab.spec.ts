@@ -14,7 +14,12 @@ test("child can upload a photo and get an AI recognition result", async ({ page 
   await page.waitForURL(/\/app\/child/);
 
   await page.goto("/kk/app/child/ecolab");
-  await page.locator('input[type="file"]').setInputFiles(TEST_IMAGE!);
+  // Gallery input (the other one has capture="environment" for the camera).
+  await page.getByLabel("Галереядан таңдау").setInputFiles(TEST_IMAGE!);
+  await page.getByRole("button", { name: "Иә, тексер!" }).click();
 
   await expect(page.getByText(/XP/)).toBeVisible({ timeout: 15000 });
+  await page.getByRole("link", { name: /Толығырақ/ }).click();
+  await expect(page).toHaveURL(/ecolab\/[a-f0-9-]+/);
+  await expect(page.getByText("Бұрынғы зерттеулер")).toBeVisible();
 });

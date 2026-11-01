@@ -82,9 +82,13 @@ export default async function LandingPage({
   const ctaSection = sectionByKey.get("cta");
   const footerSection = sectionByKey.get("footer");
 
-  function roleCardHref(route: string): string {
-    if (!session) return `/login?next=${encodeURIComponent(route)}`;
-    return roleHome(session.role);
+  // A signed-in visitor always lands in their own cabinet.
+  function roleCardHref(): string {
+    return session ? roleHome(session.role) : "/login";
+  }
+
+  function moduleLoginHref(route: string): string {
+    return session ? route : `/login?next=${encodeURIComponent(route)}`;
   }
 
   return (
@@ -156,24 +160,42 @@ export default async function LandingPage({
               const title = pick(content?.title, tModules(`${mod.key}.name`));
               const desc = pick(content?.description, tModules(`${mod.key}.desc`));
               return (
-                <Link key={mod.key} href={mod.route} className="group">
-                  <Card className="h-full border-border/60 shadow-sm transition duration-200 group-hover:-translate-y-1 group-hover:shadow-md group-focus-visible:-translate-y-1 group-focus-visible:shadow-md">
-                    <CardContent className="flex h-full flex-col gap-3 pt-2">
-                      <span
-                        className="flex size-11 items-center justify-center rounded-2xl text-white"
-                        style={{ backgroundColor: mod.color }}
+                // The card opens the public info page (stretched link on
+                // the title); login is its own button layered above it.
+                <Card
+                  key={mod.key}
+                  className="relative h-full border-border/60 shadow-sm transition duration-200 focus-within:-translate-y-1 focus-within:shadow-md hover:-translate-y-1 hover:shadow-md"
+                >
+                  <CardContent className="flex h-full flex-col gap-3 pt-2">
+                    <span
+                      className="flex size-11 items-center justify-center rounded-2xl text-white"
+                      style={{ backgroundColor: mod.color }}
+                    >
+                      {renderIcon(mod.icon, "size-5")}
+                    </span>
+                    <h3 className="font-heading text-base font-bold">
+                      <Link
+                        href={`/modules/${mod.key}`}
+                        className="after:absolute after:inset-0 after:rounded-[inherit] focus-visible:outline-none"
                       >
-                        {renderIcon(mod.icon, "size-5")}
-                      </span>
-                      <h3 className="font-heading text-base font-bold">{title}</h3>
-                      <p className="text-sm text-muted-foreground">{desc}</p>
-                      <span className="mt-auto inline-flex items-center gap-1 pt-1 text-xs font-semibold text-primary opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100">
-                        {t("openModule")}
+                        {title}
+                      </Link>
+                    </h3>
+                    <p className="text-sm text-muted-foreground">{desc}</p>
+                    <div className="mt-auto flex items-center justify-between gap-2 pt-1">
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                        {t("moduleDetails")}
                         <ArrowRight className="size-3.5" />
                       </span>
-                    </CardContent>
-                  </Card>
-                </Link>
+                      <Link
+                        href={moduleLoginHref(mod.route)}
+                        className={cn(buttonVariants({ size: "sm", variant: "outline" }), "relative z-10")}
+                      >
+                        {t("openModule")}
+                      </Link>
+                    </div>
+                  </CardContent>
+                </Card>
               );
             })}
           </div>
@@ -232,20 +254,33 @@ export default async function LandingPage({
               const title = pick(card.content[loc]?.title, tRoles(card.key));
               const desc = card.content[loc]?.description;
               return (
-                <Link key={card.key} href={roleCardHref(card.route)} className="group">
-                  <Card className="h-full border-border/60 text-center shadow-sm transition duration-200 group-hover:-translate-y-1 group-hover:shadow-md">
-                    <CardContent className="flex flex-col items-center gap-2 pt-2">
-                      <span
-                        className="flex size-12 items-center justify-center rounded-2xl text-white"
-                        style={{ backgroundColor: card.color }}
-                      >
-                        {renderIcon(card.icon, "size-6")}
-                      </span>
-                      <span className="font-heading text-base font-bold">{title}</span>
-                      {desc && <p className="text-xs text-muted-foreground">{desc}</p>}
-                    </CardContent>
-                  </Card>
-                </Link>
+                <Card
+                  key={card.key}
+                  className="relative h-full border-border/60 text-center shadow-sm transition duration-200 focus-within:-translate-y-1 hover:-translate-y-1 hover:shadow-md"
+                >
+                  <CardContent className="flex h-full flex-col items-center gap-2 pt-2">
+                    <span
+                      className="flex size-12 items-center justify-center rounded-2xl text-white"
+                      style={{ backgroundColor: card.color }}
+                    >
+                      {renderIcon(card.icon, "size-6")}
+                    </span>
+                    <Link
+                      href={`/roles/${card.key}`}
+                      className="font-heading text-base font-bold after:absolute after:inset-0 after:rounded-[inherit] focus-visible:outline-none"
+                    >
+                      {title}
+                    </Link>
+                    {desc && <p className="text-xs text-muted-foreground">{desc}</p>}
+                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                      {t("roleDetails")}
+                      <ArrowRight className="size-3.5" />
+                    </span>
+                    <Link href={roleCardHref()} className={cn(buttonVariants({ size: "sm" }), "relative z-10 mt-auto")}>
+                      {t("ctaLogin")}
+                    </Link>
+                  </CardContent>
+                </Card>
               );
             })}
           </div>

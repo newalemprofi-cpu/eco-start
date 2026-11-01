@@ -39,6 +39,7 @@
     "login": "Log in",
     "childHome": "Home",
     "childLab": "EcoLab",
+    "childLessons": "Tasks",
     "childGreenhouse": "Green Kindergarten",
     "childGames": "Games",
     "childStudio": "Studio",
@@ -77,7 +78,9 @@
     "aiBody": "Photo recognition, conversation, lesson-plan generation, story writing — all powered by one safe, age-appropriate AI system. Responses for children always use simple language and safety warnings.",
     "rolesTitle": "A tailored experience for every role",
     "footerNote": "This is a demonstration platform built for a preschool-education competition.",
-    "openModule": "Open"
+    "openModule": "Sign in",
+    "moduleDetails": "Details",
+    "roleDetails": "Features"
   },
   "modules": {
     "ecolab": { "name": "EcoLab AI", "desc": "AI-powered plant and animal recognition from photos" },
@@ -102,6 +105,7 @@
     "demoPasswordLabel": "Shared password",
     "invalidCredentials": "Incorrect email/login code or password/PIN",
     "rateLimited": "Too many attempts. Please try again shortly.",
+    "retryInMinutes": "(try again in {minutes} min)",
     "genericError": "Something went wrong while logging in. Please try again."
   },
   "child": {
@@ -209,6 +213,7 @@
     "teacherFeedback": "Teacher feedback",
     "noProjects": "No research projects yet.",
     "status": {
+      "draft": "Draft",
       "active": "In progress",
       "completed": "Completed"
     }
