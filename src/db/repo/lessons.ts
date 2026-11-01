@@ -125,7 +125,7 @@ const GROUPS_JSON = (sql: Tx) => sql`
   coalesce((
     select json_agg(json_build_object(
       'groupId', g.id, 'groupName', g.name, 'groupCode', g.code, 'assignedAt', la.assigned_at,
-      'childCount', (select count(*)::int from users c where c.group_id = g.id and c.role = 'CHILD')
+      'childCount', (select count(*)::int from users c where c.group_id = g.id and c.role = 'CHILD' and c.archived_at is null)
     ) order by la.assigned_at)
     from lesson_assignments la join groups g on g.id = la.group_id
     where la.lesson_id = l.id

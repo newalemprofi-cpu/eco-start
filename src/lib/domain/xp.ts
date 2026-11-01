@@ -37,3 +37,18 @@ export function applyXpGain(currentXp: number, gained: number): LevelUpResult {
   const newLevel = levelForXp(newXp);
   return { newXp, previousLevel, newLevel, leveledUp: newLevel > previousLevel };
 }
+
+/**
+ * Replay protection for games: the XP a child can ever collect from one
+ * game is capped at that game's max reward (games.xp_reward). A replay
+ * only pays the *improvement* over what that game has already paid out,
+ * so farming the same easy round never inflates XP, while a child who
+ * first scored 2/4 and later 4/4 still gets the difference.
+ *
+ * `alreadyAwarded` is the sum of game_sessions.xp_earned for this child
+ * and game (rows written before this rule count as paid out too).
+ */
+export function awardableGameXp(roundXp: number, alreadyAwarded: number, cap: number): number {
+  const ceiling = Math.max(0, Math.min(roundXp, cap));
+  return Math.max(0, ceiling - Math.max(0, alreadyAwarded));
+}

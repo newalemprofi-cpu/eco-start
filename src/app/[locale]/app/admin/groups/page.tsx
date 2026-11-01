@@ -10,7 +10,7 @@ export default async function AdminGroupsPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const session = await requireRole("SCHOOL_ADMIN");
+  const session = await requireRole("SCHOOL_ADMIN", "SUPER_ADMIN");
   const ctx = toTenantContext(session);
 
   const [groups, educators] = await Promise.all([listGroups(ctx), listEducatorCandidates(ctx)]);

@@ -40,7 +40,7 @@ function selectGroups(sql: Parameters<Parameters<typeof withTenantContext>[1]>[0
            g.educator_id as "educatorId", eu.display_name as "educatorName",
            g.pedagogical_assistant_id as "pedagogicalAssistantId", au.display_name as "pedagogicalAssistantName",
            g.child_count as "childCount",
-           (select count(*)::int from users c where c.group_id = g.id and c.role = 'CHILD') as "linkedChildCount",
+           (select count(*)::int from users c where c.group_id = g.id and c.role = 'CHILD' and c.archived_at is null) as "linkedChildCount",
            g.description, g.academic_year as "academicYear", g.is_active as "isActive",
            g.archived_at as "archivedAt", g.created_at as "createdAt", g.updated_at as "updatedAt"
     from groups g
@@ -187,7 +187,7 @@ export async function listEducatorCandidates(ctx: TenantContext): Promise<Teache
     ctx,
     (sql) => sql<TeacherCandidate[]>`
       select id, display_name as "displayName" from users
-      where school_id = ${ctx.schoolId} and role = 'TEACHER'
+      where school_id = ${ctx.schoolId} and role = 'TEACHER' and archived_at is null
       order by display_name
     `
   );

@@ -40,6 +40,9 @@ export type WasteSortingResult = {
 
 const POINTS_PER_CORRECT = 10;
 const XP_PER_CORRECT = 5;
+/** What one perfect pass over the whole catalog pays — the lifetime XP cap
+ * for this game (see awardableGameXp in xp.ts). */
+export const WASTE_SORTING_MAX_XP = WASTE_ITEMS.length * XP_PER_CORRECT;
 
 export function scoreWasteSortingAttempt(answers: WasteSortingAnswer[]): WasteSortingResult {
   const perItem = answers.map(({ itemId, chosenBin }) => {

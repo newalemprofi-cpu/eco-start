@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "Eco Start AI",
+    "appName": "ЭКО ҚАДАМ",
     "tagline": "Discover Nature • Explore • Create • Protect",
     "loading": "Loading...",
     "save": "Save",
@@ -69,7 +69,7 @@
   "landing": {
     "heroKicker": "The first AI platform for preschool education",
     "heroTitle": "Children discover nature together with AI",
-    "heroSubtitle": "Eco Start AI is an environmental-education platform for preschools. One central AI assistant powers the lab, games, research, family, and teacher modules.",
+    "heroSubtitle": "ЭКО ҚАДАМ is an environmental-education platform for preschools. One central AI assistant powers the lab, games, research, family, and teacher modules.",
     "ctaLogin": "Log in",
     "ctaDemo": "See demo accounts",
     "modulesTitle": "Eight modules, one AI mind",
@@ -106,6 +106,7 @@
     "invalidCredentials": "Incorrect email/login code or password/PIN",
     "rateLimited": "Too many attempts. Please try again shortly.",
     "retryInMinutes": "(try again in {minutes} min)",
+    "sessionEnded": "Your session has ended. Please sign in again.",
     "genericError": "Something went wrong while logging in. Please try again."
   },
   "child": {

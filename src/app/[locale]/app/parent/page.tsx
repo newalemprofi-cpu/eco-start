@@ -3,6 +3,8 @@ import { Camera, FlaskConical, Gamepad2, Sprout } from "lucide-react";
 import { requireRole, toTenantContext } from "@/lib/auth/dal";
 import { getLinkedChildren, getWeeklyStats } from "@/db/repo/family";
 import { getRecentActivities } from "@/db/repo/passport";
+import { getRecentPhotosForParent } from "@/db/repo/ecolab";
+import { ChildPhoto } from "@/components/child-photo";
 import { Link } from "@/i18n/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -30,9 +32,10 @@ export default async function ParentOverviewPage({
   }
 
   const activeChild = children.find((c) => c.id === childParam) ?? children[0];
-  const [stats, activities] = await Promise.all([
+  const [stats, activities, photos] = await Promise.all([
     getWeeklyStats(ctx, activeChild.id),
     getRecentActivities(ctx, activeChild.id, 8),
+    getRecentPhotosForParent(ctx, activeChild.id),
   ]);
 
   return (
@@ -75,6 +78,20 @@ export default async function ParentOverviewPage({
           </p>
         </CardContent>
       </Card>
+
+      {photos.length > 0 && (
+        <div>
+          <h2 className="font-heading text-lg font-bold">Эко Зертхана суреттері</h2>
+          <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-6">
+            {photos.map((p) => (
+              <figure key={p.id} className="flex flex-col gap-1">
+                <ChildPhoto src={p.imageUrl} alt={p.label ?? ""} className="aspect-square w-full rounded-xl bg-muted object-cover" />
+                <figcaption className="truncate text-[11px] text-muted-foreground">{p.label ?? "—"}</figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div>
         <h2 className="font-heading text-lg font-bold">{t("recentActivity")}</h2>

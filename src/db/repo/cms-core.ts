@@ -1,6 +1,7 @@
 import "server-only";
 import type postgres from "postgres";
 import { withSystemContext, withTenantContext, type TenantContext } from "@/db/client";
+import { rebrandDeep } from "@/lib/brand";
 
 export type ContentStatus = "draft" | "published";
 export type LocalizedText = { kk: string; ru: string; en: string };
@@ -50,7 +51,8 @@ export async function getPublishedSingleton<T extends Record<string, unknown>>(
   const rows = await withSystemContext(
     (sql) => sql<T[]>`select * from ${sql(table)} where status = 'published' limit 1`
   );
-  return rows[0] ?? null;
+  // Published (public) reads show the current brand name — see src/lib/brand.ts.
+  return rows[0] ? rebrandDeep(rows[0]) : null;
 }
 
 export async function getDraftSingleton<T extends Record<string, unknown>>(
@@ -203,9 +205,10 @@ export async function listPublished<T extends Record<string, unknown>>(
   table: string,
   orderBy = "display_order"
 ): Promise<T[]> {
-  return withSystemContext(
+  const rows = await withSystemContext(
     (sql) => sql<T[]>`select * from ${sql(table)} where status = 'published' order by ${sql(orderBy)} asc`
   );
+  return rows.map((row) => rebrandDeep(row));
 }
 
 export async function listDrafts<T extends Record<string, unknown>>(

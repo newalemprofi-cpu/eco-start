@@ -4,6 +4,7 @@ import { ArrowLeft, ShieldAlert, Sparkles } from "lucide-react";
 import { requireRole, toTenantContext } from "@/lib/auth/dal";
 import { getRecognitionForChild } from "@/db/repo/ecolab";
 import { Link } from "@/i18n/navigation";
+import { ChildPhoto } from "@/components/child-photo";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -40,8 +41,7 @@ export default async function RecognitionDetailPage({
       </Link>
 
       <Card className="overflow-hidden border-border/60 py-0 shadow-sm">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={entry.imageUrl} alt={entry.label ?? ""} className="max-h-80 w-full bg-muted object-cover" />
+        <ChildPhoto src={entry.imageUrl} alt={entry.label ?? ""} className="max-h-80 min-h-48 w-full bg-muted object-cover" />
         <CardContent className="flex flex-col gap-3 py-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h1 className="font-heading text-3xl font-extrabold">
@@ -94,8 +94,7 @@ export default async function RecognitionDetailPage({
             {history.map((h) => (
               <Link key={h.id} href={`/app/child/ecolab/${h.id}`} className="rounded-xl transition active:scale-95">
                 <Card className="h-full overflow-hidden border-border/60 py-0 shadow-sm">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={h.imageUrl} alt="" className="h-28 w-full bg-muted object-cover" />
+                  <ChildPhoto src={h.imageUrl} className="h-28 w-full bg-muted object-cover" />
                   <CardContent className="px-3 py-2 text-xs text-muted-foreground">{fmt(h.createdAt)}</CardContent>
                 </Card>
               </Link>

@@ -11,7 +11,7 @@ export default async function AdminOverviewPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const session = await requireRole("SCHOOL_ADMIN");
+  const session = await requireRole("SCHOOL_ADMIN", "SUPER_ADMIN");
   const ctx = toTenantContext(session);
   const [counts, logs] = await Promise.all([getSchoolOverview(ctx), listAuditLogs(ctx, 8)]);
   const t = await getTranslations("admin");

@@ -4,6 +4,7 @@ import { listMediaForChild } from "@/db/repo/media";
 import { StoryStudio } from "@/components/child/story-studio";
 import { MediaUploader } from "@/components/child/media-uploader";
 import { Card, CardContent } from "@/components/ui/card";
+import { ChildPhoto } from "@/components/child-photo";
 
 export default async function StudioPage({
   params,
@@ -34,8 +35,7 @@ export default async function StudioPage({
                 <p className="font-semibold">{m.title}</p>
                 <p className="text-xs text-muted-foreground">{m.type}</p>
                 {m.fileUrl && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={m.fileUrl} alt="" className="mt-1 h-28 w-full rounded-lg object-cover" />
+                  <ChildPhoto src={m.fileUrl} className="mt-1 h-28 w-full rounded-lg object-cover" />
                 )}
               </CardContent>
             </Card>

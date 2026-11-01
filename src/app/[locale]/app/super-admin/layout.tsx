@@ -1,4 +1,4 @@
-import { ClipboardList, LayoutDashboard, Settings2, Newspaper, Users } from "lucide-react";
+import { ClipboardList, LayoutDashboard, Settings2, Newspaper, Users, UserCog } from "lucide-react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { requireRole } from "@/lib/auth/dal";
 import { DashboardShell, type NavItem } from "@/components/shell/dashboard-shell";
@@ -25,6 +25,9 @@ export default async function SuperAdminLayout({
   const navItems: NavItem[] = [
     { href: "/app/super-admin", label: t("superOverview"), icon: LayoutDashboard },
     { href: "/app/super-admin/groups", label: "Топтар", icon: Users },
+    // Teachers / children / parents are managed in the school-admin
+    // screens, which also accept SUPER_ADMIN (scoped to this session school).
+    { href: "/app/admin/teachers", label: "Пайдаланушылар", icon: UserCog },
     { href: "/app/super-admin/news", label: "Жаңалықтар", icon: Newspaper },
     { href: "/app/super-admin/ai-config", label: t("superAiConfig"), icon: Settings2 },
     { href: "/app/super-admin/audit", label: t("superAudit"), icon: ClipboardList },

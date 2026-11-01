@@ -17,10 +17,10 @@ export default async function LoginPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string; ended?: string }>;
 }) {
   const { locale } = await params;
-  const { next } = await searchParams;
+  const { next, ended } = await searchParams;
   setRequestLocale(locale);
   const t = await getTranslations("auth");
 
@@ -40,6 +40,11 @@ export default async function LoginPage({
       <div className="mb-6 text-center">
         <h1 className="font-heading text-2xl font-bold">{t("loginTitle")}</h1>
         <p className="mt-1 text-sm text-muted-foreground">{t("loginSubtitle")}</p>
+        {ended === "1" && (
+          <p role="status" className="mx-auto mt-3 max-w-sm rounded-xl bg-amber-50 px-4 py-2 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-200">
+            {t("sessionEnded")}
+          </p>
+        )}
       </div>
 
       <LoginForm

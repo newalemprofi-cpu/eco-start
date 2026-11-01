@@ -36,6 +36,7 @@ test("a child's uploaded photo gets a guarded /uploads URL", async ({ browser })
   await child.getByLabel("Галереядан таңдау").setInputFiles({ name: "leaf.png", mimeType: "image/png", buffer: PNG });
   await child.getByRole("button", { name: "Иә, тексер!" }).click();
   await child.getByRole("link", { name: /Толығырақ/ }).click({ timeout: 15000 });
+  await child.waitForURL(/\/ecolab\/[0-9a-f-]{36}$/); // not the upload preview's blob: URL
   photoUrl = (await child.locator("main img").first().getAttribute("src")) ?? "";
   expect(photoUrl).toMatch(/^\/uploads\/recognitions\/[0-9a-f-]{36}\/[0-9a-f-]{36}\/\d+\.png$/);
   // The page itself can display it (same-origin request with the session cookie).

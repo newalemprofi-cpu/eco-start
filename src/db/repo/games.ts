@@ -3,6 +3,7 @@ import type postgres from "postgres";
 import { withTenantContext, type TenantContext } from "@/db/client";
 import type { GameResult, GameTemplate, Localized } from "@/lib/domain/game-templates/types";
 import type { WasteSortingResult } from "@/lib/domain/waste-sorting";
+import { applyXpGain, awardableGameXp, type LevelUpResult } from "@/lib/domain/xp";
 
 export type GameRow = {
   id: string;
@@ -75,22 +76,44 @@ export async function getGameIdByKey(ctx: TenantContext, key: string): Promise<s
   return rows[0]?.id ?? null;
 }
 
-export async function recordGameSession(
+/**
+ * Saves one finished round and pays its XP in a single transaction.
+ * The child's users row is locked first (`for update`), so two rounds
+ * submitted at the same moment (double tap, two tabs) are serialised
+ * and the second sees the first one's payout — a game's XP can never
+ * be counted twice. The payout follows awardableGameXp: a game pays at
+ * most `xpCap` in total, a replay only pays the improvement.
+ *
+ * game_sessions.xp_earned stores what was actually paid for the round
+ * (0 for a replay), so family/teacher XP sums stay equal to users.xp.
+ */
+export async function recordGameRoundWithXp(
   ctx: TenantContext,
   gameId: string,
-  result: WasteSortingResult | GameResult
-): Promise<void> {
-  await withTenantContext(
-    ctx,
-    (sql) => sql`
+  result: WasteSortingResult | GameResult,
+  xpCap: number
+): Promise<{ xpAwarded: number; level: LevelUpResult }> {
+  return withTenantContext(ctx, async (sql) => {
+    const [user] = await sql<{ xp: number }[]>`select xp from users where id = ${ctx.userId} for update`;
+    const [{ paid }] = await sql<{ paid: number }[]>`
+      select coalesce(sum(xp_earned), 0)::int as paid
+      from game_sessions where child_id = ${ctx.userId} and game_id = ${gameId}
+    `;
+    const xpAwarded = awardableGameXp(result.xpEarned, paid, xpCap);
+    await sql`
       insert into game_sessions (child_id, game_id, started_at, ended_at, score, correct_count, total_count, xp_earned, attempt_data)
       values (
         ${ctx.userId}, ${gameId}, now(), now(),
-        ${result.score}, ${result.correctCount}, ${result.totalCount}, ${result.xpEarned},
+        ${result.score}, ${result.correctCount}, ${result.totalCount}, ${xpAwarded},
         ${sql.json(result.perItem as unknown as postgres.JSONValue)}
       )
-    `
-  );
+    `;
+    const level = applyXpGain(user?.xp ?? 0, xpAwarded);
+    if (xpAwarded > 0) {
+      await sql`update users set xp = ${level.newXp}, level = ${level.newLevel} where id = ${ctx.userId}`;
+    }
+    return { xpAwarded, level };
+  });
 }
 
 export type GameHistoryRow = {

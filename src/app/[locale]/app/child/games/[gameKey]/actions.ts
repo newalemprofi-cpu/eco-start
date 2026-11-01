@@ -3,8 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { requireRole, toTenantContext } from "@/lib/auth/dal";
-import { getGameByKey, recordGameSession } from "@/db/repo/games";
-import { awardXp } from "@/db/repo/xp";
+import { getGameByKey, recordGameRoundWithXp } from "@/db/repo/games";
 import { awardBadgeIfNotEarned } from "@/db/repo/achievements";
 import { scoreDragSort } from "@/lib/domain/game-templates/drag-sort";
 import { scoreQuizMatch } from "@/lib/domain/game-templates/quiz-match";
@@ -115,8 +114,9 @@ export async function submitGenericGameRound(
       break;
   }
 
-  await recordGameSession(ctx, game.id, result);
-  await awardXp(ctx, result.xpEarned);
+  // The client sees what was actually paid (0 on a replay of a maxed game).
+  const { xpAwarded } = await recordGameRoundWithXp(ctx, game.id, result, game.xpReward);
+  result = { ...result, xpEarned: xpAwarded };
 
   let badgeEarned = false;
   if (game.badgeKey && result.totalCount > 0 && result.correctCount / result.totalCount >= BADGE_THRESHOLD) {

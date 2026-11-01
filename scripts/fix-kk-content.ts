@@ -29,14 +29,14 @@ async function main() {
 
   try {
     console.log("→ fixing brand name...");
-    await sql`update brand_settings set site_name = 'Эко Start', short_name = 'Эко Start'`;
+    await sql`update brand_settings set site_name = 'ЭКО ҚАДАМ', short_name = 'ЭКО ҚАДАМ'`;
 
     console.log("→ fixing homepage_sections content + disabling removed sections...");
     const sectionPatches: { key: string; content: Record<string, unknown> }[] = [
       {
         key: "modules",
         content: {
-          title: "«Эко Start» цифрлық орталығының модульдері",
+          title: "«ЭКО ҚАДАМ» цифрлық орталығының модульдері",
           subtitle: "",
           description: "Балаларға, тәрбиешілерге және ата-аналарға арналған",
           buttonText: "",
@@ -74,7 +74,7 @@ async function main() {
       {
         key: "cta",
         content: {
-          title: "Бөбекжайыңызды «Эко Start»-қа қосыңыз",
+          title: "Бөбекжайыңызды «ЭКО ҚАДАМ»-ға қосыңыз",
           subtitle: "",
           description: "Бүгін бастаңыз — демо тіркелгілермен барлық мүмкіндікті тегін көріңіз.",
           buttonText: "Қазір бастау",
@@ -83,7 +83,7 @@ async function main() {
       {
         key: "footer",
         content: {
-          title: "Эко Start",
+          title: "ЭКО ҚАДАМ",
           subtitle: "",
           description: "Бұл — мектепке дейінгі білім беру бәйгесіне арналған демонстрациялық платформа.",
           buttonText: "",

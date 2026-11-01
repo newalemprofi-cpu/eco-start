@@ -16,9 +16,9 @@ export async function listSchools(ctx: TenantContext): Promise<SchoolRow[]> {
     ctx,
     (sql) => sql<SchoolRow[]>`
       select s.id, s.name, s.region, s.plan,
-             (select count(*)::int from users u where u.school_id = s.id and u.role = 'TEACHER') as "teacherCount",
-             (select count(*)::int from users u where u.school_id = s.id and u.role = 'CHILD') as "childCount",
-             (select count(*)::int from users u where u.school_id = s.id and u.role = 'CHILD' and u.needs_review) as "needsReviewCount"
+             (select count(*)::int from users u where u.school_id = s.id and u.role = 'TEACHER' and u.archived_at is null) as "teacherCount",
+             (select count(*)::int from users u where u.school_id = s.id and u.role = 'CHILD' and u.archived_at is null) as "childCount",
+             (select count(*)::int from users u where u.school_id = s.id and u.role = 'CHILD' and u.needs_review and u.archived_at is null) as "needsReviewCount"
       from schools s
       order by s.created_at desc
     `

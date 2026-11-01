@@ -137,3 +137,26 @@ export async function saveRecognition(
   );
   return row;
 }
+
+/**
+ * A parent's view of their child's latest Эко Зертхана photos. Returns
+ * nothing unless `childId` is linked to this parent (parent_child_links,
+ * checked in the same query), so a forged child id shows no photos —
+ * and the image bytes themselves are guarded again by /api/media.
+ */
+export async function getRecentPhotosForParent(ctx: TenantContext, childId: string, limit = 6): Promise<JournalEntry[]> {
+  const rows = await withTenantContext(
+    ctx,
+    (sql) => sql<RecognitionRow[]>`
+      select r.id, r.kind, r.image_url, r.confidence, r.ai_provider, r.ai_is_mock, r.ai_summary,
+             (s.common_name->>'kk') as species_label, r.created_at
+      from recognitions r
+      left join species s on s.id = r.species_id
+      where r.child_id = ${childId}
+        and exists (select 1 from parent_child_links l where l.parent_id = ${ctx.userId} and l.child_id = ${childId})
+      order by r.created_at desc
+      limit ${limit}
+    `
+  );
+  return rows.map(toEntry);
+}

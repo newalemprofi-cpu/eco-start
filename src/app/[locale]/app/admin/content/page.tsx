@@ -13,7 +13,7 @@ export default async function AdminContentPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const session = await requireRole("SCHOOL_ADMIN");
+  const session = await requireRole("SCHOOL_ADMIN", "SUPER_ADMIN");
   const ctx = toTenantContext(session);
   const media = await listRecentMedia(ctx);
   const games = await withTenantContext(

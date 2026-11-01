@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyXpGain, levelForXp, levelProgressPercent, xpNeededForNextLevel } from "@/lib/domain/xp";
+import { applyXpGain, awardableGameXp, levelForXp, levelProgressPercent, xpNeededForNextLevel } from "@/lib/domain/xp";
 
 describe("levelForXp", () => {
   it("starts at level 1 with 0 xp", () => {
@@ -49,5 +49,28 @@ describe("applyXpGain", () => {
   it("never lets xp go negative even with a large negative delta", () => {
     const result = applyXpGain(5, -100);
     expect(result.newXp).toBe(0);
+  });
+});
+
+describe("awardableGameXp (replay protection)", () => {
+  it("pays the full round on the first play", () => {
+    expect(awardableGameXp(30, 0, 30)).toBe(30);
+  });
+
+  it("pays nothing for replaying an already-maxed game", () => {
+    expect(awardableGameXp(30, 30, 30)).toBe(0);
+    expect(awardableGameXp(30, 90, 30)).toBe(0); // legacy farmed history
+  });
+
+  it("pays only the improvement over earlier rounds", () => {
+    expect(awardableGameXp(15, 0, 30)).toBe(15);
+    expect(awardableGameXp(30, 15, 30)).toBe(15);
+    expect(awardableGameXp(15, 15, 30)).toBe(0);
+  });
+
+  it("never exceeds the cap, never goes negative", () => {
+    expect(awardableGameXp(500, 0, 30)).toBe(30);
+    expect(awardableGameXp(-5, 0, 30)).toBe(0);
+    expect(awardableGameXp(10, -3, 30)).toBe(10);
   });
 });
