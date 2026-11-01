@@ -2,9 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { requireRole, toTenantContext } from "@/lib/auth/dal";
-import { getGameIdByKey, recordGameSession } from "@/db/repo/games";
-import { awardXp } from "@/db/repo/xp";
-import { scoreWasteSortingAttempt, type WasteSortingAnswer } from "@/lib/domain/waste-sorting";
+import { getGameIdByKey, recordGameRoundWithXp } from "@/db/repo/games";
+import { scoreWasteSortingAttempt, WASTE_SORTING_MAX_XP, type WasteSortingAnswer } from "@/lib/domain/waste-sorting";
 import { z } from "zod";
 
 const answerSchema = z.object({
@@ -29,11 +28,10 @@ export async function submitWasteSortingRound(locale: string, rawAnswers: WasteS
   const gameId = await getGameIdByKey(ctx, "waste_sorting");
   if (!gameId) return { ok: false as const, error: "game_not_found" };
 
-  await recordGameSession(ctx, gameId, result);
-  await awardXp(ctx, result.xpEarned);
+  const { xpAwarded } = await recordGameRoundWithXp(ctx, gameId, result, WASTE_SORTING_MAX_XP);
 
   revalidatePath(`/${locale}/app/child/games/waste-sorting`);
   revalidatePath(`/${locale}/app/child`);
 
-  return { ok: true as const, result };
+  return { ok: true as const, result: { ...result, xpEarned: xpAwarded } };
 }

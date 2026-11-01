@@ -1,5 +1,6 @@
 import path from "node:path";
 import { Document, Font, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
+import { BRAND_NAME } from "@/lib/brand";
 
 // Kazakh/Russian certificate text is Cyrillic; the PDF standard-14
 // fonts (Helvetica etc.) only cover Latin, so a Cyrillic-capable font
@@ -104,7 +105,7 @@ export function CertificateDocument({
           <Text style={styles.reason}>{reason}</Text>
           <View style={styles.footer}>
             <Text style={styles.footerText}>{new Date(issuedAt).toLocaleDateString()}</Text>
-            <Text style={styles.footerText}>«Эко Start» цифрлық орталығы</Text>
+            <Text style={styles.footerText}>«{BRAND_NAME}» цифрлық орталығы</Text>
           </View>
         </View>
       </Page>

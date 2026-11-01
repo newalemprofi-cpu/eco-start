@@ -79,7 +79,7 @@ export function AddTeacherDialog({
               <Label htmlFor="groupId">Топ</Label>
               <Select name="groupId">
                 <SelectTrigger id="groupId" className="w-full">
-                  <SelectValue placeholder="—" />
+                  <SelectValue>{(v: string) => groups.find((g) => g.id === v)?.name ?? "—"}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {groups.map((g) => (

@@ -49,7 +49,7 @@ export async function getAllChildrenInGroup(ctx: TenantContext, groupId: string)
     (sql) => sql<{ id: string; displayName: string; xp: number; level: number; avatarUrl: string | null }[]>`
       select id, display_name as "displayName", xp, level, avatar_url as "avatarUrl"
       from users
-      where role = 'CHILD' and group_id = ${groupId}
+      where role = 'CHILD' and group_id = ${groupId} and archived_at is null
       order by display_name
     `
   );

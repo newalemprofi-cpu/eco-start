@@ -13,9 +13,9 @@ export async function getSchoolOverview(ctx: TenantContext): Promise<SchoolCount
   return withTenantContext(ctx, async (sql) => {
     const [row] = await sql<SchoolCounts[]>`
       select
-        (select count(*)::int from users where school_id = ${ctx.schoolId} and role = 'TEACHER') as teachers,
-        (select count(*)::int from users where school_id = ${ctx.schoolId} and role = 'CHILD') as children,
-        (select count(*)::int from users where school_id = ${ctx.schoolId} and role = 'PARENT') as parents,
+        (select count(*)::int from users where school_id = ${ctx.schoolId} and role = 'TEACHER' and archived_at is null) as teachers,
+        (select count(*)::int from users where school_id = ${ctx.schoolId} and role = 'CHILD' and archived_at is null) as children,
+        (select count(*)::int from users where school_id = ${ctx.schoolId} and role = 'PARENT' and archived_at is null) as parents,
         (select count(*)::int from groups where school_id = ${ctx.schoolId}) as groups,
         (select count(*)::int from ai_logs where school_id = ${ctx.schoolId}) as "aiCalls"
     `;
@@ -118,7 +118,7 @@ export async function listNeedsReviewChildren(ctx: TenantContext): Promise<Needs
       select id, display_name as "displayName", login_code as "loginCode",
              coalesce(review_note->'candidateGroupCodes', '[]'::jsonb) as "candidateGroupCodes"
       from users
-      where school_id = ${ctx.schoolId} and role = 'CHILD' and needs_review = true
+      where school_id = ${ctx.schoolId} and role = 'CHILD' and needs_review = true and archived_at is null
       order by display_name
     `
   );

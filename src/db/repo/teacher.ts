@@ -19,7 +19,7 @@ export async function getPrimaryGroup(ctx: TenantContext): Promise<TeacherGroup>
     (sql) => sql<NonNullable<TeacherGroup>[]>`
       select g.id, g.name, g.age_band as "ageBand", g.code, g.age_category as "ageCategory",
              au.display_name as "pedagogicalAssistantName",
-             (select count(*)::int from users c where c.group_id = g.id and c.role = 'CHILD') as "childCount"
+             (select count(*)::int from users c where c.group_id = g.id and c.role = 'CHILD' and c.archived_at is null) as "childCount"
       from teacher_groups tg
       join groups g on g.id = tg.group_id
       left join users au on au.id = g.pedagogical_assistant_id
@@ -40,7 +40,7 @@ export async function listTeacherGroups(ctx: TenantContext): Promise<NonNullable
     (sql) => sql<NonNullable<TeacherGroup>[]>`
       select g.id, g.name, g.age_band as "ageBand", g.code, g.age_category as "ageCategory",
              au.display_name as "pedagogicalAssistantName",
-             (select count(*)::int from users c where c.group_id = g.id and c.role = 'CHILD') as "childCount"
+             (select count(*)::int from users c where c.group_id = g.id and c.role = 'CHILD' and c.archived_at is null) as "childCount"
       from teacher_groups tg
       join groups g on g.id = tg.group_id
       left join users au on au.id = g.pedagogical_assistant_id
@@ -65,7 +65,7 @@ export async function getRoster(ctx: TenantContext, groupId: string): Promise<Ro
     (sql) => sql<RosterChild[]>`
       select id, display_name as "displayName", avatar_url as "avatarUrl", xp, level, login_code as "loginCode"
       from users
-      where role = 'CHILD' and group_id = ${groupId}
+      where role = 'CHILD' and group_id = ${groupId} and archived_at is null
       order by display_name
     `
   );

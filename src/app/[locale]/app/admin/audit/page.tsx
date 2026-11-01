@@ -10,7 +10,7 @@ export default async function AdminAuditPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const session = await requireRole("SCHOOL_ADMIN");
+  const session = await requireRole("SCHOOL_ADMIN", "SUPER_ADMIN");
   const logs = await listAuditLogs(toTenantContext(session), 100);
   const t = await getTranslations("admin");
 

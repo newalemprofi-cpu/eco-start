@@ -1,6 +1,7 @@
 import "server-only";
 import { withTenantContext, type TenantContext } from "@/db/client";
 import { jsonbObjectSql } from "@/db/jsonb";
+import { toServedMediaUrl } from "@/lib/storage/media-access";
 
 // Every function here takes a groupId the caller has already checked
 // against teacher_groups (see teacherOwnsGroup) — RLS alone only scopes
@@ -56,7 +57,7 @@ export async function getGroupAnalytics(ctx: TenantContext, groupId: string): Pr
   return withTenantContext(ctx, async (sql) => {
     const [summary] = await sql<{ avgXp: number; totalChildren: number }[]>`
       select coalesce(avg(xp), 0)::float as "avgXp", count(*)::int as "totalChildren"
-      from users where role = 'CHILD' and group_id = ${groupId}
+      from users where role = 'CHILD' and group_id = ${groupId} and archived_at is null
     `;
 
     const [active] = await sql<{ activeChildren: number }[]>`
@@ -78,7 +79,7 @@ export async function getGroupAnalytics(ctx: TenantContext, groupId: string): Pr
     `;
 
     const xpByChild = await sql<{ name: string; xp: number }[]>`
-      select display_name as name, xp from users where role = 'CHILD' and group_id = ${groupId} order by xp desc
+      select display_name as name, xp from users where role = 'CHILD' and group_id = ${groupId} and archived_at is null order by xp desc
     `;
 
     const activityByDay = await sql<{ day: string; actions: number }[]>`
@@ -138,7 +139,7 @@ export async function getChildActivityTable(ctx: TenantContext, groupId: string)
            left join (select ev.at::date as day, count(*) as n from ev where ev.child_id = u.id group by 1) c
              on c.day = d.day::date) as daily
       from users u
-      where u.role = 'CHILD' and u.group_id = ${groupId}
+      where u.role = 'CHILD' and u.group_id = ${groupId} and u.archived_at is null
       order by "isActive" desc, "lastActivityAt" desc nulls last, u.display_name
     `
   );
@@ -192,7 +193,7 @@ export type ChildDetail = {
   games: { title: Record<string, string>; score: number; xpEarned: number; endedAt: string }[];
   research: { projectTitle: string; measurement: number | null; note: string | null; loggedAt: string }[];
   achievements: { title: Record<string, string>; earnedAt: string }[];
-  recognitions: { label: string | null; kind: string; createdAt: string }[];
+  recognitions: { label: string | null; kind: string; imageUrl: string | null; createdAt: string }[];
 };
 
 /** The group a child belongs to, if it is one of the teacher's groups. */
@@ -235,10 +236,12 @@ export async function getChildDetail(ctx: TenantContext, groupId: string, childI
       order by ca.earned_at desc
     `;
     const recognitions = await sql<ChildDetail["recognitions"]>`
-      select ${sql.unsafe(jsonbObjectSql("r.ai_summary"))}->>'label' as label, r.kind, r.created_at as "createdAt"
+      select ${sql.unsafe(jsonbObjectSql("r.ai_summary"))}->>'label' as label, r.kind, r.image_url as "imageUrl", r.created_at as "createdAt"
       from recognitions r where r.child_id = ${childId}
       order by r.created_at desc limit 10
     `;
-    return { child, games, research, achievements, recognitions };
+    // Legacy public R2 URLs → guarded /uploads/… path, as in ecolab.ts.
+    const photos = recognitions.map((r) => ({ ...r, imageUrl: toServedMediaUrl(r.imageUrl, process.env.R2_PUBLIC_URL) }));
+    return { child, games, research, achievements, recognitions: photos };
   });
 }

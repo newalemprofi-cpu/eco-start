@@ -16,6 +16,7 @@ import { config } from "dotenv";
 import bcrypt from "bcryptjs";
 import postgres from "postgres";
 import { ECOGAMES, ECOGAME_ACHIEVEMENTS } from "./seed-data/ecogames";
+import { RELEASE2_GAMES } from "./seed-data/release2-games";
 import { assertDemoSchoolsAreDemoOnly, assertSeedEnvironment, SeedRefusedError } from "./seed-guard";
 
 config({ path: ".env.local" });
@@ -188,6 +189,19 @@ async function main() {
     await sql`update games set age_categories = '{MIDDLE_3}' where key = 'water-the-flower'`;
     await sql`update games set age_categories = '{SENIOR_4}' where key = 'plant-needs'`;
     await sql`update games set age_categories = '{PRESCHOOL_5}' where key = 'nature-puzzle'`;
+
+    // Release 2: ten age-banded games (3–4 / 4–5 / 5–6). Production gets
+    // the same rows from migration 0016, generated from this catalog.
+    for (const g of RELEASE2_GAMES) {
+      await sql`
+        insert into games (key, title, description, config, icon, color, difficulty, age_min, age_max, xp_reward, badge_key, template, display_order, age_categories)
+        values (
+          ${g.key}, ${sql.json(g.title)}, ${sql.json(g.description)}, ${sql.json(g.config as postgres.JSONValue)},
+          ${g.icon}, ${g.color}, ${g.difficulty}, ${g.ageMin}, ${g.ageMax}, ${g.xpReward}, null, ${g.template}, ${g.order},
+          ${sql.array(g.ageCategories)}::group_age_category[]
+        )
+      `;
+    }
 
     console.log("→ seeding achievements...");
     await sql`delete from achievements`; // global reference content; cascades any leftover child_achievements
@@ -480,21 +494,21 @@ async function main() {
             title: "Табиғатты бірге зерттейміз",
             subtitle: "AI негізінде білім беру",
             description:
-              "«Эко Start» — мектепке дейінгі мекемелерге арналған алғашқы жасанды интеллект платформасы. Ол зертхана, ойын, шығармашылық және отбасы модульдерін бір орталық Эко Көмекшімен біріктіреді.",
+              "«ЭКО ҚАДАМ» — мектепке дейінгі мекемелерге арналған алғашқы жасанды интеллект платформасы. Ол зертхана, ойын, шығармашылық және отбасы модульдерін бір орталық Эко Көмекшімен біріктіреді.",
             buttonText: "Мүмкіндіктерді көру",
           },
           ru: {
             title: "Исследуем природу вместе",
             subtitle: "Образование на основе ИИ",
             description:
-              "Eco Start AI — первая платформа искусственного интеллекта для дошкольных учреждений. Она объединяет лабораторию, игры, творчество и модули для семьи вокруг одного центрального AI-помощника.",
+              "ЭКО ҚАДАМ — первая платформа искусственного интеллекта для дошкольных учреждений. Она объединяет лабораторию, игры, творчество и модули для семьи вокруг одного центрального AI-помощника.",
             buttonText: "Посмотреть возможности",
           },
           en: {
             title: "Discover nature, together",
             subtitle: "AI-powered learning",
             description:
-              "Eco Start AI is the first artificial intelligence platform built for preschools — a lab, games, creativity, and family modules, all powered by one central Eco AI assistant.",
+              "ЭКО ҚАДАМ is the first artificial intelligence platform built for preschools — a lab, games, creativity, and family modules, all powered by one central Eco AI assistant.",
             buttonText: "See what's inside",
           },
         },
@@ -507,7 +521,7 @@ async function main() {
         background: "default",
         buttonLink: null,
         content: {
-          kk: { title: "«Эко Start» цифрлық орталығының модульдері", subtitle: "", description: "Балаларға, тәрбиешілерге және ата-аналарға арналған", buttonText: "" },
+          kk: { title: "«ЭКО ҚАДАМ» цифрлық орталығының модульдері", subtitle: "", description: "Балаларға, тәрбиешілерге және ата-аналарға арналған", buttonText: "" },
           ru: { title: "Восемь модулей, один разум ИИ", subtitle: "", description: "Каждый модуль подключён к единому Eco AI помощнику — для детей, воспитателей и родителей", buttonText: "" },
           en: { title: "Eight modules, one AI mind", subtitle: "", description: "Every module connects to the same Eco AI assistant — for children, teachers, and parents", buttonText: "" },
         },
@@ -596,19 +610,19 @@ async function main() {
         buttonLink: "/login",
         content: {
           kk: {
-            title: "Бөбекжайыңызды «Эко Start»-қа қосыңыз",
+            title: "Бөбекжайыңызды «ЭКО ҚАДАМ»-ға қосыңыз",
             subtitle: "",
             description: "Бүгін бастаңыз — демо тіркелгілермен барлық мүмкіндікті тегін көріңіз.",
             buttonText: "Қазір бастау",
           },
           ru: {
-            title: "Подключите свой детский сад к Eco Start AI",
+            title: "Подключите свой детский сад к ЭКО ҚАДАМ",
             subtitle: "",
             description: "Начните сегодня — посмотрите все возможности бесплатно через демо-аккаунты.",
             buttonText: "Начать сейчас",
           },
           en: {
-            title: "Bring Eco Start AI to your school",
+            title: "Bring ЭКО ҚАДАМ to your school",
             subtitle: "",
             description: "Start today — explore every feature for free with the demo accounts.",
             buttonText: "Get started",
@@ -623,9 +637,9 @@ async function main() {
         background: "default",
         buttonLink: null,
         content: {
-          kk: { title: "Эко Start", subtitle: "", description: "Бұл — мектепке дейінгі білім беру бәйгесіне арналған демонстрациялық платформа.", buttonText: "" },
-          ru: { title: "Eco Start AI", subtitle: "", description: "Это демонстрационная платформа для конкурса по дошкольному образованию.", buttonText: "" },
-          en: { title: "Eco Start AI", subtitle: "", description: "This is a demonstration platform built for a preschool-education competition.", buttonText: "" },
+          kk: { title: "ЭКО ҚАДАМ", subtitle: "", description: "Бұл — мектепке дейінгі білім беру бәйгесіне арналған демонстрациялық платформа.", buttonText: "" },
+          ru: { title: "ЭКО ҚАДАМ", subtitle: "", description: "Это демонстрационная платформа для конкурса по дошкольному образованию.", buttonText: "" },
+          en: { title: "ЭКО ҚАДАМ", subtitle: "", description: "This is a demonstration platform built for a preschool-education competition.", buttonText: "" },
         },
       },
     ];

@@ -1,5 +1,6 @@
 import "server-only";
 import { withSystemContext, withTenantContext, type TenantContext } from "@/db/client";
+import { rebrandDeep } from "@/lib/brand";
 import {
   listDrafts,
   listPublished,
@@ -75,7 +76,7 @@ export async function getPublishedNewsBySlug(slug: string): Promise<NewsItemRow 
     const rows = await sql<NewsItemRow[]>`
       select * from news_items where slug = ${slug} and status = 'published' limit 1
     `;
-    return rows[0] ? normalizeNewsMediaFields(rows[0]) : null;
+    return rows[0] ? rebrandDeep(normalizeNewsMediaFields(rows[0])) : null;
   });
 }
 
@@ -109,8 +110,8 @@ export async function getPublishedNewsNeighbors(
       `,
     ]);
     return {
-      prev: prevRows[0] ? normalizeNewsMediaFields(prevRows[0]) : null,
-      next: nextRows[0] ? normalizeNewsMediaFields(nextRows[0]) : null,
+      prev: prevRows[0] ? rebrandDeep(normalizeNewsMediaFields(prevRows[0])) : null,
+      next: nextRows[0] ? rebrandDeep(normalizeNewsMediaFields(nextRows[0])) : null,
     };
   });
 }

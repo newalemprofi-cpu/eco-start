@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { getPublishedBrand, getPublishedTheme } from "@/db/repo/cms";
+import { BRAND_NAME } from "@/lib/brand";
 import type { BrandSettingsRow, ThemeSettingsRow } from "@/db/repo/cms";
 
 /**
@@ -34,8 +35,8 @@ const FALLBACK_BRAND: Omit<
   BrandSettingsRow,
   "id" | "status" | "version" | "updated_at" | "published_at"
 > = {
-  site_name: "Эко Start",
-  short_name: "Эко Start",
+  site_name: BRAND_NAME,
+  short_name: BRAND_NAME,
   logo_url: null,
   logo_dark_url: null,
   favicon_url: null,

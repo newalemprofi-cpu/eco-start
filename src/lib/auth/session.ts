@@ -11,6 +11,9 @@ export type SessionPayload = {
   schoolId: string;
   displayName: string;
   locale: "kk" | "ru" | "en";
+  /** Issued-at (epoch seconds), set by SignJWT — compared against
+   * users.sessions_revoked_at in dal.ts. */
+  iat?: number;
 };
 
 const SESSION_COOKIE = "eco_start_session";

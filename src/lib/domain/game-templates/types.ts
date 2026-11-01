@@ -101,7 +101,7 @@ export type SequenceOrderAnswer = { sequenceId: string; orderedStepIds: string[]
 
 // ── scenario_decision ────────────────────────────────────────────────
 
-export type ScenarioChoice = { id: string; label: Localized; isBest: boolean };
+export type ScenarioChoice = { id: string; label: Localized; isBest: boolean; emoji?: string };
 export type Scenario = { id: string; prompt: Localized; emoji: string; choices: ScenarioChoice[] };
 export type ScenarioDecisionConfig = { scenarios: Scenario[] };
 export type ScenarioDecisionAnswer = { scenarioId: string; chosenChoiceId: string };

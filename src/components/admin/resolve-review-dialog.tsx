@@ -71,7 +71,13 @@ export function ResolveReviewDialog({
         </p>
         <Select value={groupId} onValueChange={(v) => v && setGroupId(v)}>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Топты таңдаңыз" />
+            {/* base-ui renders the raw value (a uuid) unless given a label function */}
+            <SelectValue>
+              {(v: string) => {
+                const g = groups.find((x) => x.id === v);
+                return g ? `${g.name} (${g.code})` : "Топты таңдаңыз";
+              }}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {candidates.map((g) => (

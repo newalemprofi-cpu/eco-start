@@ -12,7 +12,7 @@ export default async function AdminLayout({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const session = await requireRole("SCHOOL_ADMIN");
+  const session = await requireRole("SCHOOL_ADMIN", "SUPER_ADMIN");
   const t = await getTranslations("nav");
   const tRoles = await getTranslations("roles");
 
@@ -27,7 +27,7 @@ export default async function AdminLayout({
   ];
 
   return (
-    <DashboardShell navItems={navItems} roleLabel={tRoles("SCHOOL_ADMIN")} userName={session.displayName}>
+    <DashboardShell navItems={navItems} roleLabel={tRoles(session.role)} userName={session.displayName}>
       {children}
     </DashboardShell>
   );

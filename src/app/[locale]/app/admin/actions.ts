@@ -8,7 +8,7 @@ import { hashSecret } from "@/lib/auth/hash";
 import { createChildSchema, createParentSchema, createTeacherSchema } from "@/lib/validation/admin";
 
 export async function createTeacherAction(locale: string, formData: FormData) {
-  const session = await requireRole("SCHOOL_ADMIN");
+  const session = await requireRole("SCHOOL_ADMIN", "SUPER_ADMIN");
   const parsed = createTeacherSchema.safeParse({
     displayName: formData.get("displayName"),
     email: formData.get("email"),
@@ -32,7 +32,7 @@ export async function createTeacherAction(locale: string, formData: FormData) {
 }
 
 export async function createChildAction(locale: string, formData: FormData) {
-  const session = await requireRole("SCHOOL_ADMIN");
+  const session = await requireRole("SCHOOL_ADMIN", "SUPER_ADMIN");
   const parsed = createChildSchema.safeParse({
     displayName: formData.get("displayName"),
     loginCode: formData.get("loginCode"),
@@ -60,7 +60,7 @@ export async function createChildAction(locale: string, formData: FormData) {
 }
 
 export async function createParentAction(locale: string, formData: FormData) {
-  const session = await requireRole("SCHOOL_ADMIN");
+  const session = await requireRole("SCHOOL_ADMIN", "SUPER_ADMIN");
   const parsed = createParentSchema.safeParse({
     displayName: formData.get("displayName"),
     email: formData.get("email"),
@@ -83,7 +83,7 @@ export async function createParentAction(locale: string, formData: FormData) {
 
 export async function resolveChildGroupAction(locale: string, childId: string, groupId: string) {
   if (!childId || !groupId) return { ok: false as const, error: "validation" };
-  const session = await requireRole("SCHOOL_ADMIN");
+  const session = await requireRole("SCHOOL_ADMIN", "SUPER_ADMIN");
   const ctx = toTenantContext(session);
   await resolveChildGroup(ctx, childId, groupId);
   await logAudit(ctx, "resolve_review", "user:child", childId, null, { groupId });
@@ -97,7 +97,7 @@ export async function setMediaStatusAction(
   mediaId: string,
   status: "private" | "shared_family" | "shared_school"
 ) {
-  const session = await requireRole("SCHOOL_ADMIN");
+  const session = await requireRole("SCHOOL_ADMIN", "SUPER_ADMIN");
   const ctx = toTenantContext(session);
   await setMediaStatus(ctx, mediaId, status);
   await logAudit(ctx, "update_status", "media_asset", mediaId, null, { status });

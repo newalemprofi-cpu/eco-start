@@ -7,6 +7,7 @@ import { Link } from "@/i18n/navigation";
 import { ActivityBars } from "@/components/teacher/activity-bars";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ChildPhoto } from "@/components/child-photo";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -107,6 +108,24 @@ export default async function TeacherChildReportPage({
           ))}
         </Section>
       </div>
+
+      {detail.recognitions.some((r) => r.imageUrl) && (
+        <Card className="border-border/60 shadow-sm">
+          <CardContent className="pt-2">
+            <h2 className="mb-3 font-heading text-sm font-bold text-muted-foreground">Эко Зертхана суреттері</h2>
+            <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+              {detail.recognitions
+                .filter((r) => r.imageUrl)
+                .map((r, i) => (
+                  <figure key={i} className="flex flex-col gap-1">
+                    <ChildPhoto src={r.imageUrl} alt={r.label ?? ""} className="aspect-square w-full rounded-lg bg-muted object-cover" />
+                    <figcaption className="truncate text-[11px] text-muted-foreground">{r.label ?? "—"}</figcaption>
+                  </figure>
+                ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
