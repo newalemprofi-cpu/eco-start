@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { routing } from "@/i18n/routing";
 import { decrypt } from "@/lib/auth/session";
 import { roleHome } from "@/lib/auth/dal";
+import { isPrivateUploadPath } from "@/lib/storage/media-access";
 
 // Next.js 16 renamed Middleware to Proxy; behavior is unchanged. This
 // file does two jobs in one pass because only one proxy.ts is allowed
@@ -36,6 +37,19 @@ function stripLocale(pathname: string): { locale: string; rest: string } {
 }
 
 export default async function proxy(request: NextRequest) {
+  // Children's photos/media always go through the guarded handler.
+  // Doing it here (not only in the /uploads route) also beats Next's
+  // static public/ serving, which would otherwise hand out any file
+  // under public/uploads present at server start — with no auth at all.
+  if (request.nextUrl.pathname.toLowerCase().startsWith("/uploads/")) {
+    if (isPrivateUploadPath(request.nextUrl.pathname)) {
+      const target = request.nextUrl.clone();
+      target.pathname = `/api/media/${request.nextUrl.pathname.slice("/uploads/".length)}`;
+      return NextResponse.rewrite(target);
+    }
+    return NextResponse.next();
+  }
+
   const retired = request.nextUrl.pathname.match(RETIRED_LOCALE_RE);
   if (retired) {
     const target = new URL(`/${routing.defaultLocale}${retired[2] ?? ""}`, request.url);
@@ -85,5 +99,9 @@ export const config = {
   // matcher without the explicit exclusion, which is wrong for a route
   // that must serve files exactly at "/uploads/<key>", never
   // "/kk/uploads/<key>").
-  matcher: ["/((?!api|uploads|_next|_vercel|.*\\..*).*)"],
+  //
+  // "/uploads/:path*" is matched separately (dotted filenames included)
+  // only so the branch at the top of proxy() can send children's media
+  // to the guarded handler; public uploads pass straight through.
+  matcher: ["/((?!api|uploads|_next|_vercel|.*\\..*).*)", "/uploads/:path*"],
 };

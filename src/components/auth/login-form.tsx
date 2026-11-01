@@ -123,6 +123,9 @@ export function LoginForm({
               {state.error && (
                 <p role="alert" className="text-sm text-destructive">
                   {t(ERROR_MESSAGE_KEY[state.error] ?? "genericError")}
+                  {state.error === "rate_limited" && state.retryAfterMinutes
+                    ? ` ${t("retryInMinutes", { minutes: state.retryAfterMinutes })}`
+                    : null}
                 </p>
               )}
 

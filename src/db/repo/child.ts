@@ -1,5 +1,6 @@
 import "server-only";
 import { withTenantContext, type TenantContext } from "@/db/client";
+import type { GroupAgeCategory } from "@/lib/group-age-categories";
 
 export type ChildSummary = {
   id: string;
@@ -52,4 +53,18 @@ export async function getAllChildrenInGroup(ctx: TenantContext, groupId: string)
       order by display_name
     `
   );
+}
+
+/** The child's group age category (MIDDLE_3 = 3–4 жас, ...), used to
+ * pick how much a child UI asks of them. Null when not in a group. */
+export async function getChildAgeCategory(ctx: TenantContext): Promise<GroupAgeCategory | null> {
+  const rows = await withTenantContext(
+    ctx,
+    (sql) => sql<{ ageCategory: GroupAgeCategory | null }[]>`
+      select g.age_category as "ageCategory"
+      from users u left join groups g on g.id = u.group_id
+      where u.id = ${ctx.userId}
+    `
+  );
+  return rows[0]?.ageCategory ?? null;
 }

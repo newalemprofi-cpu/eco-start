@@ -1,8 +1,9 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { requireRole, toTenantContext } from "@/lib/auth/dal";
 import { listLessons } from "@/db/repo/lessons";
-import { AiStudio } from "@/components/teacher/ai-studio";
-import { Badge } from "@/components/ui/badge";
+import { listTeacherGroups } from "@/db/repo/teacher";
+import { AiStudio, type StudioGroup } from "@/components/teacher/ai-studio";
+import { LessonLibrary } from "@/components/teacher/lesson-library";
 
 export default async function AiStudioPage({
   params,
@@ -12,8 +13,17 @@ export default async function AiStudioPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const session = await requireRole("TEACHER");
-  const lessons = await listLessons(toTenantContext(session));
+  const ctx = toTenantContext(session);
+  const [lessons, teacherGroups] = await Promise.all([listLessons(ctx), listTeacherGroups(ctx)]);
   const t = await getTranslations("teacher");
+
+  const groups: StudioGroup[] = teacherGroups.map((g) => ({
+    id: g.id,
+    name: g.name,
+    code: g.code,
+    ageCategory: g.ageCategory,
+    childCount: g.childCount,
+  }));
 
   return (
     <div className="flex flex-col gap-8">
@@ -22,24 +32,13 @@ export default async function AiStudioPage({
         <p className="mt-1 text-muted-foreground">{t("aiStudioSubtitle")}</p>
       </div>
 
-      <AiStudio locale={locale} />
+      <AiStudio locale={locale} groups={groups} />
 
       {lessons.length > 0 && (
         <div>
           <h2 className="font-heading text-lg font-bold">{t("lessonLibrary")}</h2>
-          <div className="mt-3 flex flex-col gap-2">
-            {lessons.map((l) => (
-              <div
-                key={l.id}
-                className="flex items-center justify-between rounded-xl border border-border/60 bg-card px-4 py-2.5 text-sm"
-              >
-                <span className="font-medium">{l.topic}</span>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Badge variant={l.status === "published" ? "default" : "outline"}>{l.status}</Badge>
-                  <span>{l.ageBand}</span>
-                </div>
-              </div>
-            ))}
+          <div className="mt-3">
+            <LessonLibrary locale={locale} lessons={lessons} groups={groups} />
           </div>
         </div>
       )}

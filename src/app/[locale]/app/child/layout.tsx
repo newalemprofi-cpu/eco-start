@@ -1,4 +1,4 @@
-import { Camera, MessageCircle, Palette, Sprout, Trophy, Wallet, FlaskConical } from "lucide-react";
+import { BookOpen, Camera, MessageCircle, Palette, Sprout, Trophy, Wallet, FlaskConical } from "lucide-react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { requireRole, toTenantContext } from "@/lib/auth/dal";
 import { getChildSummary } from "@/db/repo/child";
@@ -19,6 +19,7 @@ export default async function ChildLayout({
 
   const navItems: ChildNavItem[] = [
     { href: "/app/child", label: t("childHome"), icon: Wallet, color: "var(--primary)" },
+    { href: "/app/child/lessons", label: t("childLessons"), icon: BookOpen, color: "var(--module-analytics)" },
     { href: "/app/child/ecolab", label: t("childLab"), icon: Camera, color: "var(--module-ecolab)" },
     { href: "/app/child/greenhouse", label: t("childGreenhouse"), icon: Sprout, color: "var(--module-greenhouse)" },
     { href: "/app/child/games", label: t("childGames"), icon: Trophy, color: "var(--module-game)" },

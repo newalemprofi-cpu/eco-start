@@ -21,17 +21,20 @@ export function WaterButton({
   return (
     <Button
       variant="outline"
-      size="sm"
+      size="lg"
       disabled={pending}
       onClick={async () => {
         setPending(true);
-        await markWateredAction(locale, entryId);
-        setPending(false);
-        router.refresh();
+        try {
+          await markWateredAction(locale, entryId);
+          router.refresh();
+        } finally {
+          setPending(false);
+        }
       }}
-      className="gap-1.5"
+      className="min-h-12 gap-1.5 text-base"
     >
-      {pending ? <Loader2 className="size-3.5 animate-spin" /> : <Droplets className="size-3.5" />}
+      {pending ? <Loader2 className="size-5 animate-spin" /> : <Droplets className="size-5" />}
       {label}
     </Button>
   );

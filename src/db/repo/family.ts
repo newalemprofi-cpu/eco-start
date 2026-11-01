@@ -55,7 +55,7 @@ export async function getHomework(ctx: TenantContext, groupId: string | null): P
       select la.id, l.topic, la.due_at as "dueAt"
       from lesson_assignments la
       join lessons l on l.id = la.lesson_id
-      where la.group_id = ${groupId}
+      where la.group_id = ${groupId} and l.status = 'published'
       order by la.assigned_at desc
       limit 5
     `

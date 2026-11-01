@@ -85,8 +85,23 @@ export class MockAiProvider implements AiProvider {
       ru: `Урок на тему «${input.topic}»`,
       en: `Lesson: ${input.topic}`,
     };
+    // Youngest bands get their own playful, picture-and-movement steps
+    // instead of the 5-6 plan cut short (normalizeLessonForAge only trims).
+    const youngKk: Record<string, string[]> = {
+      "3-4": [
+        `«${input.topic}» суретін көрсетіп, «Бұл не?» деп сұрау (2 мин).`,
+        "Қимыл ойыны: бәріміз бірге «жапырақтай» тербелеміз.",
+        "Нағыз затты қолмен ұстап көру, «қандай?» деп айту.",
+      ],
+      "4-5": [
+        `«${input.topic}» туралы суретті әңгіме (3 мин).`,
+        "Ойын: дұрыс суретті тауып, көрсет.",
+        "Табиғи затпен қарапайым бақылау.",
+        "Шеңбер: «Маған не ұнады?»",
+      ],
+    };
     const plans: Record<string, string[]> = {
-      kk: [
+      kk: youngKk[ageBand] ?? [
         "Балалармен тақырып туралы әңгіме бастау (5 мин).",
         `«${input.topic}» туралы қызықты фактілерді көрсету.`,
         "Топтық сурет салу немесе жинау белсенділігі.",
@@ -121,7 +136,9 @@ export class MockAiProvider implements AiProvider {
       quiz: [
         {
           question:
-            input.locale === "kk"
+            input.locale === "kk" && ageBand === "3-4"
+              ? `Қайсысы «${input.topic}»? Көрсет!`
+              : input.locale === "kk"
               ? `«${input.topic}» неге маңызды?`
               : input.locale === "ru"
                 ? `Почему важна тема «${input.topic}»?`

@@ -14,6 +14,7 @@ export async function createPlantAction(locale: string, formData: FormData) {
   const parsed = createPlantSchema.safeParse({
     nickname: formData.get("nickname"),
     waterSchedule: formData.get("waterSchedule"),
+    plantKey: formData.get("plantKey") || undefined,
   });
   if (!parsed.success) return { ok: false as const, error: "validation" };
 
@@ -34,14 +35,20 @@ export async function addGrowthLogAction(locale: string, entryId: string, formDa
   const session = await requireRole("CHILD");
   const parsed = addGrowthLogSchema.safeParse({
     heightCm: formData.get("heightCm") || undefined,
+    leafCount: formData.get("leafCount") || undefined,
+    stage: formData.get("stage") || undefined,
     note: formData.get("note") || undefined,
   });
   if (!parsed.success) return { ok: false as const, error: "validation" };
+  const { heightCm, leafCount, stage, note } = parsed.data;
+  if (heightCm == null && leafCount == null && !stage && !note) return { ok: false as const, error: "empty" };
 
   const ctx = toTenantContext(session);
   await addGrowthLog(ctx, entryId, {
-    heightCm: parsed.data.heightCm ?? null,
-    note: parsed.data.note ?? null,
+    heightCm: heightCm ?? null,
+    leafCount: leafCount ?? null,
+    stage: stage ?? null,
+    note: note ?? null,
   });
   await awardXp(ctx, OBSERVATION_XP);
   revalidatePath(`/${locale}/app/child/greenhouse/${entryId}`);

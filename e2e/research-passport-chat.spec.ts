@@ -21,9 +21,11 @@ test("child can view a research project, chart, and add an observation", async (
   await page.goto("/kk/app/child/research");
   await page.getByText(SYNTHETIC_RESEARCH_PROJECT_TITLE).click();
   await expect(page).toHaveURL(/research\/[a-f0-9-]+/);
-  await page.getByLabel(/Өлшем/).fill("15");
+  // Tap-only form: +/− stepper and picture notes instead of typing.
+  await page.getByRole("button", { name: "Көбейту" }).click();
+  await page.getByRole("button", { name: /Өсті/ }).click();
   await page.getByRole("button", { name: "Өлшеу қосу" }).click();
-  await page.waitForTimeout(1500);
+  await expect(page.getByText("Менің бақылауларым")).toBeVisible({ timeout: 10000 });
 });
 
 test("child passport shows XP, badges, and a downloadable certificate", async ({ page }) => {

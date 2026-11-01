@@ -47,7 +47,8 @@ export function ChildShell({
         </div>
       </header>
 
-      <nav className="mx-auto flex max-w-5xl flex-wrap justify-center gap-2 px-4 py-4 sm:gap-3">
+      {/* Big picture buttons (≥88px) — the main way a pre-reader moves around. */}
+      <nav className="mx-auto grid max-w-5xl grid-cols-3 gap-2 px-4 py-4 sm:flex sm:flex-wrap sm:justify-center sm:gap-3">
         {navItems.map((item) => {
           const Icon = item.icon;
           return (
@@ -55,14 +56,14 @@ export function ChildShell({
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-col items-center gap-1.5 rounded-2xl border border-border/60 bg-card px-4 py-3 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:px-5 sm:py-4"
+                "flex min-h-22 flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-border/60 bg-card px-3 py-3 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-95 sm:min-w-24 sm:px-5 sm:py-4"
               )}
             >
               <span
-                className="flex size-10 items-center justify-center rounded-xl text-white sm:size-12"
+                className="flex size-12 items-center justify-center rounded-xl text-white sm:size-14"
                 style={{ backgroundColor: item.color }}
               >
-                <Icon className="size-5 sm:size-6" />
+                <Icon className="size-6 sm:size-7" />
               </span>
               <span className="text-xs font-bold sm:text-sm">{item.label}</span>
             </Link>

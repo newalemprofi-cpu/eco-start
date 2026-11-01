@@ -49,7 +49,7 @@ export async function addMessage(
     ctx,
     (sql) => sql`
       insert into chat_messages (thread_id, sender, content, safety_flags)
-      values (${threadId}, ${sender}, ${content}, ${JSON.stringify(safetyFlags)})
+      values (${threadId}, ${sender}, ${content}, ${sql.json(safetyFlags)})
     `
   );
 }

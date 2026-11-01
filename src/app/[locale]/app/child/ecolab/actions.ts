@@ -24,6 +24,7 @@ export type AnalyzeResult =
       isMock: boolean;
       imageUrl: string;
       xpEarned: number;
+      recognitionId: string;
     }
   | { ok: false; error: string };
 
@@ -69,7 +70,7 @@ export async function analyzeImageAction(locale: string, formData: FormData): Pr
   const key = `recognitions/${ctx.schoolId}/${ctx.userId}/${Date.now()}.${ext}`;
   const { url } = await storage.putObject({ key, data: buffer, contentType: file.type });
 
-  await saveRecognition(ctx, {
+  const saved = await saveRecognition(ctx, {
     kind: recognition.kind,
     imageUrl: url,
     confidence: recognition.confidence,
@@ -96,5 +97,6 @@ export async function analyzeImageAction(locale: string, formData: FormData): Pr
     isMock: recognition.isMock,
     imageUrl: url,
     xpEarned: RECOGNITION_XP,
+    recognitionId: saved.id,
   };
 }

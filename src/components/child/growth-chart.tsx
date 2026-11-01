@@ -4,9 +4,12 @@ import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YA
 import type { GrowthLog } from "@/db/repo/greenhouse";
 
 export function GrowthChart({ logs }: { logs: GrowthLog[] }) {
+  // Centimetres when the child measured them; otherwise the leaf
+  // counts tapped in the picture form, so 3-4 year-olds get a chart too.
+  const useHeight = logs.some((l) => l.heightCm != null);
   const data = logs
-    .filter((l) => l.heightCm != null)
-    .map((l) => ({ date: l.loggedAt.slice(5, 10), height: Number(l.heightCm) }));
+    .filter((l) => (useHeight ? l.heightCm != null : l.leafCount != null))
+    .map((l) => ({ date: l.loggedAt.slice(5, 10), height: Number(useHeight ? l.heightCm : l.leafCount) }));
 
   if (data.length === 0) {
     return (
@@ -40,6 +43,7 @@ export function GrowthChart({ logs }: { logs: GrowthLog[] }) {
           <Area
             type="monotone"
             dataKey="height"
+            name={useHeight ? "см" : "жапырақ"}
             stroke="var(--module-greenhouse)"
             strokeWidth={2}
             fill="url(#growthFill)"

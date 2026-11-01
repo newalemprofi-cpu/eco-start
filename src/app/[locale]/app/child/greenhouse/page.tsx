@@ -1,7 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Sprout } from "lucide-react";
 import { requireRole, toTenantContext } from "@/lib/auth/dal";
 import { listEntries } from "@/db/repo/greenhouse";
+import { getPlant, PLANT_CATEGORY_INFO } from "@/lib/domain/plant-catalog";
 import { Link } from "@/i18n/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +22,7 @@ export default async function GreenhousePage({
 
   return (
     <div className="flex flex-col gap-6 pt-4">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-heading text-2xl font-extrabold">{t("title")}</h1>
           <p className="mt-1 text-muted-foreground">{t("subtitle")}</p>
@@ -39,30 +39,40 @@ export default async function GreenhousePage({
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {entries.map((entry) => (
-            <Card key={entry.id} className="border-border/60 shadow-sm">
-              <CardContent className="flex flex-col gap-2 pt-2">
-                <div className="flex items-center justify-between">
-                  <Link href={`/app/child/greenhouse/${entry.id}`} className="flex items-center gap-2">
-                    <span className="flex size-9 items-center justify-center rounded-xl bg-module-greenhouse/15 text-module-greenhouse">
-                      <Sprout className="size-4.5" />
+          {entries.map((entry) => {
+            const plant = getPlant(entry.plantKey);
+            const stage = plant.stages.find((s) => s.key === entry.latestStage);
+            return (
+              <Card key={entry.id} className="border-border/60 shadow-sm">
+                <CardContent className="flex flex-col gap-3 pt-2">
+                  <Link href={`/app/child/greenhouse/${entry.id}`} className="flex items-center gap-3">
+                    <span className="flex size-16 shrink-0 items-center justify-center rounded-2xl bg-module-greenhouse/15 text-4xl">
+                      {plant.emoji}
                     </span>
-                    <span className="font-heading font-bold">{entry.nickname}</span>
+                    <div className="min-w-0 flex-1">
+                      <span className="block truncate font-heading text-lg font-bold">{entry.nickname}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {PLANT_CATEGORY_INFO[plant.category].emoji} {PLANT_CATEGORY_INFO[plant.category].label}
+                      </span>
+                    </div>
+                    {stage && (
+                      <span className="text-3xl" title={stage.label} aria-label={stage.label}>
+                        {stage.emoji}
+                      </span>
+                    )}
                   </Link>
-                  <Badge variant="outline">{t(`status.${entry.status}`)}</Badge>
-                </div>
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>
-                    {entry.latestHeightCm != null ? `${entry.latestHeightCm} cm` : "—"}
-                  </span>
-                  <span>
-                    {t("lastWatered")}: {entry.lastWateredAt ?? "—"}
-                  </span>
-                </div>
-                <WaterButton locale={locale} entryId={entry.id} label={t("markWatered")} />
-              </CardContent>
-            </Card>
-          ))}
+                  <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    <Badge variant="outline">{t(`status.${entry.status}`)}</Badge>
+                    <span>{entry.latestHeightCm != null ? `${entry.latestHeightCm} cm` : ""}</span>
+                    <span>
+                      💧 {entry.lastWateredAt ? new Date(entry.lastWateredAt).toLocaleDateString(locale) : "—"}
+                    </span>
+                  </div>
+                  <WaterButton locale={locale} entryId={entry.id} label={t("markWatered")} />
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>

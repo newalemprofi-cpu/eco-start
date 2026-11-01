@@ -4,6 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Loader2, Send } from "lucide-react";
+import { toast } from "sonner";
 import { setFeedbackAction } from "@/app/[locale]/app/teacher/research/actions";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,13 +26,23 @@ export function FeedbackForm({
     <form
       action={async (fd) => {
         setPending(true);
-        await setFeedbackAction(locale, projectId, fd);
-        setPending(false);
-        router.refresh();
+        try {
+          const res = await setFeedbackAction(locale, projectId, fd);
+          if (res.ok) {
+            toast.success("Пікір сақталды.");
+            router.refresh();
+          } else {
+            toast.error(res.error);
+          }
+        } catch {
+          toast.error("Қате орын алды.");
+        } finally {
+          setPending(false);
+        }
       }}
       className="flex flex-col gap-2"
     >
-      <Textarea name="feedback" defaultValue={initialValue ?? ""} rows={2} placeholder={t("teacherFeedback")} />
+      <Textarea name="feedback" defaultValue={initialValue ?? ""} rows={2} maxLength={500} placeholder={t("teacherFeedback")} />
       <Button type="submit" size="sm" disabled={pending} className="w-fit gap-1.5">
         {pending ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
         {t("teacherFeedback")}

@@ -1,4 +1,5 @@
 import type { AiAudience, AiLocale } from "@/lib/ai/types";
+import { AGE_BAND_PROFILES, DEFAULT_AGE_BAND, isAgeBand } from "@/lib/domain/age-bands";
 
 const CHAT_SYSTEM: Record<AiLocale, (audience: AiAudience) => string> = {
   kk: (audience) =>
@@ -55,8 +56,12 @@ export function recognitionSystemPrompt(locale: AiLocale): string {
 
 export function lessonPrompt(locale: AiLocale, topic: string, ageBand: string): string {
   const lang = { kk: "қазақ", ru: "русском", en: "English" }[locale];
-  return `Create a preschool environmental-education mini-lesson about "${topic}" for age band ${ageBand}, written in ${lang}.
-Respond ONLY as JSON: {"title": string, "ageBand": string, "objective": string, "plan": string[] (4-6 short steps), "quiz": [{"question": string, "options": string[3], "correctIndex": number}] (3 questions), "homeworkTip": string}.
+  const band = isAgeBand(ageBand) ? ageBand : DEFAULT_AGE_BAND;
+  const profile = AGE_BAND_PROFILES[band];
+  return `Create a preschool environmental-education play activity about "${topic}" for children aged ${band}, written in ${lang}.
+${profile.promptGuidance}
+The whole activity lasts about ${profile.durationMinutes} minutes.
+Respond ONLY as JSON: {"title": string, "ageBand": "${band}", "objective": string, "plan": string[] (at most ${profile.maxPlanSteps} short steps), "quiz": [{"question": string, "options": string[${profile.maxQuizOptions}], "correctIndex": number}] (at most ${profile.maxQuizQuestions} questions), "homeworkTip": string}.
 Keep language simple and age-appropriate. No unsafe instructions.`;
 }
 
